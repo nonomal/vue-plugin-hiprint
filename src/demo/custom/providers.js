@@ -15,6 +15,7 @@ export const aProvider = function (ops) {
               testData: '单据表头',
               height: 17,
               fontSize: 16.5,
+              field: "headera",
               fontWeight: "700",
               textAlign: "center",
               hideTitle: true
@@ -26,6 +27,7 @@ export const aProvider = function (ops) {
               testData: '单据类型',
               height: 16,
               fontSize: 15,
+              field: "textType",
               fontWeight: "700",
               textAlign: "center",
               hideTitle: true
@@ -58,26 +60,22 @@ export const aProvider = function (ops) {
           {
             tid: 'aProviderModule.barcode', title: '条形码', data: 'XS888888888', type: 'text',
             options: {
+              field: 'barcode',
               testData: 'XS888888888',
               height: 32,
               fontSize: 12,
               lineHeight: 18,
-              fontWeight: "700",
-              textAlign: "left",
-              textContentVerticalAlign: "middle",
               textType: "barcode"
             }
           },
           {
             tid: 'aProviderModule.qrcode', title: '二维码', data: 'XS888888888', type: 'text',
             options: {
+              field: 'qrcode',
               testData: 'XS888888888',
               height: 32,
               fontSize: 12,
               lineHeight: 18,
-              fontWeight: "700",
-              textAlign: "left",
-              textContentVerticalAlign: "middle",
               textType: "qrcode"
             }
           },
@@ -171,8 +169,8 @@ export const aProvider = function (ops) {
                 {title: '金额', align: 'center', field: 'JE', width: 100, checked: false},
               ],
             ],
-            rowsColumnsMerge: function (data, row, index) {
-              // 返回一个数组,参数一为列合并数,参数二为行合并数, 被合并的行或者列值设为0
+            rowsColumnsMerge: function (data, col, index) {
+              // 返回一个数组,参数一为行（rowspan）合并数,参数二为列（colspan）合并数, 被合并的行或者列值设为0
               if (index == 0) {
                 return [1, data.INDEX % 2 == 1 ? 2 : 1]
               } else if (index > 0 && index < 2) {
@@ -217,6 +215,16 @@ export const aProvider = function (ops) {
             tid: 'aProviderModule.oval',
             title: '椭圆',
             type: 'oval'
+          },
+          {
+            tid: 'aProviderModule.barcode',
+            title: '条形码',
+            type: 'barcode',
+          },
+          {
+            tid: 'aProviderModule.qrcode',
+            title: '二维码',
+            type: 'qrcode',
           }
         ])
       ]
@@ -284,26 +292,22 @@ export const bProvider = function (ops) {
           {
             tid: 'bProviderModule.barcode', title: '条形码', data: 'XS888888888', type: 'text',
             options: {
+              field: 'barcode',
               testData: 'XS888888888',
               height: 32,
               fontSize: 12,
               lineHeight: 18,
-              fontWeight: "700",
-              textAlign: "left",
-              textContentVerticalAlign: "middle",
               textType: "barcode"
             }
           },
           {
             tid: 'bProviderModule.qrcode', title: '二维码', data: 'XS888888888', type: 'text',
             options: {
+              field: 'qrcode',
               testData: 'XS888888888',
               height: 32,
               fontSize: 12,
               lineHeight: 18,
-              fontWeight: "700",
-              textAlign: "left",
-              textContentVerticalAlign: "middle",
               textType: "qrcode"
             }
           },

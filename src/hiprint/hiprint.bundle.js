@@ -42,6 +42,9 @@ import "@claviska/jquery-minicolors/jquery.minicolors.min";
 import JsBarcode from "jsbarcode";
 // 二维码
 import "./plugins/qrcode.js";
+import bwipjs from "bwip-js"
+// 水印
+import watermark from "./plugins/watermark.js";
 // 直接打印需要
 import {io} from "socket.io-client";
 //引入标尺
@@ -49,8 +52,9 @@ import lImg from "./css/image/l_img.svg";
 import vImg from "./css/image/v_img.svg";
 // pdf
 import {jsPDF} from "jspdf";
-import html2canvas from "html2canvas";
-import Nzh from "nzh/dist/nzh.min.js"
+import html2canvas from "@wtto00/html2canvas";
+// 数字转中文,大写,金额
+import Nzh from "nzh/dist/nzh.min.js";
 // 解析svg 到 canvas, 二维码条形码需要
 import Canvg from 'canvg';
 // 默认自定义拖拽列表
@@ -59,6 +63,36 @@ import defaultTypeProvider from "./etypes/default-etyps-provider";
 window.$ = window.jQuery = $;
 window.autoConnect = true;
 window.io = io;
+
+var languages = {}
+const ctx = require.context("../i18n", true, /\.json$/);
+ctx.keys().forEach(key => {
+  languages[key.match(/\.\/([^.]+)/)[1]] = ctx(key)
+})
+
+var i18n = {
+  lang: 'cn',
+  languages,
+  __: function(key, params) {
+    var str = this.languages[this.lang][key] || key
+    if (params && params instanceof Object) {
+      Object.keys(params).forEach(key => {
+        str = str.replace(new RegExp(`{{${key}}}`, 'g'), params[key])
+      })
+      return str
+    } else if (params) {
+      str= str.replace(/%s/g, params)
+      return str
+    } else {
+      return str
+    }
+  },
+  __n: function(key, val) {
+    var str = this.languages[this.lang][key]
+    str = str.replace(/%s/g, val)
+    return str
+  },
+}
 
 var hiprint = function (t) {
   var e = {};
@@ -120,7 +154,6 @@ var hiprint = function (t) {
     id: 0,
     off: function off(t, e) {
       var n = i[t];
-
       if (n) {
         for (var o = -1, r = 0; r < n.length; r++) {
           if (n[r] === e) {
@@ -128,7 +161,6 @@ var hiprint = function (t) {
             break;
           }
         }
-
         o < 0 || i[t].splice(o, 1);
       }
     },
@@ -286,6 +318,7 @@ var hiprint = function (t) {
     if (t) try {
       var o = "string" == typeof t ? new Date(t) : t;
       var n = {
+        "y+": o.getFullYear(),
         "M+": o.getMonth() + 1,
         "d+": o.getDate(),
         "H+": o.getHours(),
@@ -357,562 +390,7 @@ var hiprint = function (t) {
   var i = n(9),
     o = function () {
       function t() {
-        this.providers = [], this.movingDistance = 1.5, this.paperHeightTrim = 1, this.text = {
-          supportOptions: [{
-            name: "title",
-            hidden: !1,
-            title: ""
-          }, {
-            name: "field",
-            hidden: !1
-          }, {
-            name: "testData",
-            hidden: !1
-          }, {
-            name: "coordinate",
-            hidden: !1
-          }, {
-            name: "dataType",
-            hidden: !1
-          }, {
-            name: "fontFamily",
-            hidden: !1
-          }, {
-            name: "fontSize",
-            hidden: !1
-          }, {
-            name: "fontWeight",
-            hidden: !1
-          }, {
-            name: "letterSpacing",
-            hidden: !1
-          }, {
-            name: "color",
-            hidden: !1
-          }, {
-            name: "textDecoration",
-            hidden: !1
-          }, {
-            name: "textAlign",
-            hidden: !1
-          }, {
-            name: "textContentVerticalAlign",
-            hidden: !1
-          }, {
-            name: "lineHeight",
-            hidden: !1
-          }, {
-            name: "textType",
-            hidden: !1
-          }, {
-            name: "barcodeMode",
-            hidden: !1
-          }, {
-            name: "qrCodeLevel",
-            hidden: !1
-          }, {
-            name: "hideTitle",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "unShowInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "optionsGroup",
-            hidden: !1
-          }, {
-            name: "borderLeft",
-            hidden: !1
-          }, {
-            name: "borderTop",
-            hidden: !1
-          }, {
-            name: "borderRight",
-            hidden: !1
-          }, {
-            name: "borderBottom",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "contentPaddingLeft",
-            hidden: !1
-          }, {
-            name: "contentPaddingTop",
-            hidden: !1
-          }, {
-            name: "contentPaddingRight",
-            hidden: !1
-          }, {
-            name: "contentPaddingBottom",
-            hidden: !1
-          }, {
-            name: "backgroundColor",
-            hidden: !1
-          }, {
-            name: "formatter",
-            hidden: !1
-          }, {
-            name: "styler",
-            hidden: !1
-          }],
-          default: {
-            fontFamily: void 0,
-            fontSize: void 0,
-            fontWeight: "",
-            letterSpacing: void 0,
-            textAlign: void 0,
-            textType: "text",
-            hideTitle: !1,
-            height: 9.75,
-            lineHeight: void 0,
-            width: 120
-          }
-        }, this.image = {
-          supportOptions: [{
-            name: "field",
-            hidden: !1
-          }, {
-            name: "src",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "formatter",
-            hidden: !1
-          }, {
-            name: "styler",
-            hidden: !1
-          }],
-          default: {}
-        }, this.longText = {
-          supportOptions: [{
-            name: "title",
-            hidden: !1
-          }, {
-            name: "field",
-            hidden: !1
-          }, {
-            name: "testData",
-            hidden: !1
-          }, {
-            name: "fontFamily",
-            hidden: !1
-          }, {
-            name: "fontSize",
-            hidden: !1
-          }, {
-            name: "fontWeight",
-            hidden: !1
-          }, {
-            name: "letterSpacing",
-            hidden: !1
-          }, {
-            name: "textAlign",
-            hidden: !1
-          }, {
-            name: "lineHeight",
-            hidden: !1
-          }, {
-            name: "color",
-            hidden: !1
-          }, {
-            name: "hideTitle",
-            hidden: !1
-          }, {
-            name: "longTextIndent",
-            hidden: !1
-          }, {
-            name: "leftSpaceRemoved",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "unShowInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "lHeight",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "optionsGroup",
-            hidden: !1
-          }, {
-            name: "borderLeft",
-            hidden: !1
-          }, {
-            name: "borderTop",
-            hidden: !1
-          }, {
-            name: "borderRight",
-            hidden: !1
-          }, {
-            name: "borderBottom",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "contentPaddingLeft",
-            hidden: !1
-          }, {
-            name: "contentPaddingTop",
-            hidden: !1
-          }, {
-            name: "contentPaddingRight",
-            hidden: !1
-          }, {
-            name: "contentPaddingBottom",
-            hidden: !1
-          }, {
-            name: "backgroundColor",
-            hidden: !1
-          }, {
-            name: "formatter",
-            hidden: !1
-          }, {
-            name: "styler",
-            hidden: !1
-          }],
-          default: {
-            fontFamily: void 0,
-            fontSize: void 0,
-            fontWeight: "",
-            letterSpacing: void 0,
-            textAlign: void 0,
-            hideTitle: !1,
-            height: 42,
-            lineHeight: void 0,
-            width: 550
-          }
-        }, this.table = {
-          supportOptions: [{
-            name: "field",
-            hidden: !1
-          }, {
-            name: "fontFamily",
-            hidden: !1
-          }, {
-            name: "fontSize",
-            hidden: !1
-          }, {
-            name: "lineHeight",
-            hidden: !1
-          }, {
-            name: "textAlign",
-            hidden: !1
-          }, {
-            name: "gridColumns",
-            hidden: !1
-          }, {
-            name: "gridColumnsGutter",
-            hidden: !1
-          }, {
-            name: "tableHeaderRepeat",
-            hidden: !1
-          }, {
-            name: "tableBorder",
-            hidden: !1
-          }, {
-            name: "tableHeaderBorder",
-            hidden: !1
-          }, {
-            name: "tableHeaderCellBorder",
-            hidden: !1
-          }, {
-            name: "tableHeaderRowHeight",
-            hidden: !1
-          }, {
-            name: "tableHeaderBackground",
-            hidden: !1
-          }, {
-            name: "tableHeaderFontSize",
-            hidden: !1
-          }, {
-            name: "tableHeaderFontWeight",
-            hidden: !1
-          }, {
-            name: "tableBodyRowHeight",
-            hidden: !1
-          }, {
-            name: "tableBodyRowBorder",
-            hidden: !1
-          }, {
-            name: "tableBodyCellBorder",
-            hidden: !1
-          }, {
-            name: 'tableFooterBorder',
-            hidden: !1
-          }, {
-            name: 'tableFooterCellBorder',
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "lHeight",
-            hidden: !1
-          }, {
-            name: "autoCompletion",
-            hidden: !1
-          }, {
-            name: "columns",
-            hidden: !1
-          }, {
-            name: "styler",
-            hidden: !1
-          }, {
-            name: "rowStyler",
-            hidden: !1
-          }, {
-            name: "tableFooterRepeat",
-            hidden: !1
-          }, {
-            name: "footerFormatter",
-            hidden: !1
-          }, {
-            name: "rowsColumnsMerge",
-            hidden: !1
-          },
-            {
-              name: "gridColumnsFooterFormatter",
-              hidden: !1
-            }],
-          default: {
-            fontFamily: void 0,
-            fontSize: void 0,
-            fontWeight: "",
-            textAlign: void 0,
-            tableBorder: void 0,
-            tableHeaderBorder: void 0,
-            tableHeaderCellBorder: void 0,
-            tableHeaderBackground: void 0,
-            tableHeaderRowHeight: void 0,
-            tableHeaderFontWeight: void 0,
-            tableBodyCellBorder: void 0,
-            tableFooterBorder: void 0,
-            tableFooterCellBorder: void 0,
-            tableBodyRowHeight: void 0,
-            letterSpacing: "",
-            lineHeight: void 0,
-            width: 550
-          }
-        }, this.hline = {
-          supportOptions: [{
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "borderStyle",
-            hidden: !1
-          }],
-          default: {
-            borderWidth: .75,
-            height: 9,
-            width: 90
-          }
-        }, this.vline = {
-          supportOptions: [{
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "borderStyle",
-            hidden: !1
-          }],
-          default: {
-            borderWidth: void 0,
-            height: 90,
-            width: 9
-          }
-        }, this.rect = {
-          supportOptions: [{
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "borderStyle",
-            hidden: !1
-          }],
-          default: {
-            borderWidth: void 0,
-            height: 90,
-            width: 90
-          }
-        }, this.oval = {
-          supportOptions: [{
-            name: "borderColor",
-            hidden: !1
-          }, {
-            name: "borderWidth",
-            hidden: !1
-          }, {
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "transform",
-            hidden: !1
-          }, {
-            name: "borderStyle",
-            hidden: !1
-          }],
-          default: {
-            borderWidth: void 0,
-            height: 90,
-            width: 90
-          }
-        }, this.html = {
-          supportOptions: [{
-            name: "showInPage",
-            hidden: !1
-          }, {
-            name: "unShowInPage",
-            hidden: !1
-          }, {
-            name: "fixed",
-            hidden: !1
-          }, {
-            name: "axis",
-            hidden: !1
-          }, {
-            name: "formatter",
-            hidden: !1
-          }],
-          default: {
-            height: 90,
-            width: 90
-          }
-        }, this.tableColumn = {
-          supportOptions: [{
-            name: "title",
-            hidden: !1
-          }, {
-            name: "align",
-            hidden: !1
-          }, {
-            name: "halign",
-            hidden: !1
-          }, {
-            name: "vAlign",
-            hidden: !1
-          }, {
-            name: "paddingLeft",
-            hidden: !1
-          }, {
-            name: "paddingRight",
-            hidden: !1
-          }, {
-            name: "formatter2",
-            hidden: !1
-          }, {
-            name: "tableSummary",
-            hidden: !1
-          }, {
-            name: "styler2",
-            hidden: !1
-          }, {
-            name: 'tableTextType',
-            hidden: !1
-          }, {
-            name: 'tableBarcodeMode',
-            hidden: !1
-          }, {
-            name: 'tableQRCodeLevel',
-            hidden: !1
-          }, {
-            name: 'tableColumnHeight',
-            hidden: !1
-          }],
-          default: {
-            height: 90,
-            width: 90
-          }
-        };
+        // see hiprint.config.js
       }
 
       return t.prototype.init = function (t) {
@@ -1066,6 +544,9 @@ var hiprint = function (t) {
 
     return t.prototype.setDefault = function (t) {
       this.defaultOptions = t, this.initSize();
+      Object.keys(this.defaultOptions).forEach(key => {
+        this[key] = this[key] || this.defaultOptions[key];
+      })
     }, t.prototype.initSize = function () {
       this.width || this.setWidth(this.defaultOptions.width), this.height || this.setHeight(this.defaultOptions.height);
     }, t.prototype.initSizeByHtml = function (t, e) {
@@ -1083,7 +564,7 @@ var hiprint = function (t) {
       }
       return d;
     }, t.prototype.getLeft = function () {
-      return this.left;
+      return this.left - 0;
     }, t.prototype.posLeft = function () {
       var left = this.left;
       if (this.transform) left += this.getRectInfo().diffW;
@@ -1098,7 +579,7 @@ var hiprint = function (t) {
     }, t.prototype.setLeft = function (t) {
       null != t && (this.left = t);
     }, t.prototype.getTop = function () {
-      return this.top;
+      return this.top - 0;
     }, t.prototype.posTop = function () {
       var top = this.top;
       if (this.transform) top += this.getRectInfo().diffH;
@@ -1119,7 +600,7 @@ var hiprint = function (t) {
         var i = this.getRectInfo();
         return i.h + i.diffH;
       }
-      return this.height;
+      return this.height - 0;
     }, t.prototype.displayHeight = function () {
       return this.height + "pt";
     }, t.prototype.setHeight = function (t) {
@@ -1129,7 +610,7 @@ var hiprint = function (t) {
         var i = this.getRectInfo();
         return i.w + i.diffW;
       }
-      return this.width;
+      return this.width - 0;
     }, t.prototype.displayWidth = function () {
       return this.width + "pt";
     }, t.prototype.setWidth = function (t) {
@@ -1209,12 +690,29 @@ var hiprint = function (t) {
       }, BasePrintElement.prototype.getTitle = function () {
         return this.printElementType.title;
       }, BasePrintElement.prototype.updateSizeAndPositionOptions = function (t, e, n, i) {
+        const template = _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.getPrintTemplateById(this.templateId)
+        if (this.panel !== void 0 && !template.willOutOfBounds) {
+          const panelWidthPt = hinnn.mm.toPt(this.panel.width)
+          const panelHeightPt = hinnn.mm.toPt(this.panel.height)
+          if (t < 0) {
+            return
+          }
+          if (e < 0) {
+            return
+          }
+          if (t + this.options.width > panelWidthPt) {
+            return
+          }
+          if (e + this.options.height > panelHeightPt) {
+            return
+          }
+        }
         this.options.setLeft(t), this.options.setTop(e), this.options.copyDesignTopFromTop(), this.options.setWidth(n), this.options.setHeight(i);
       }, BasePrintElement.prototype.initSizeByHtml = function (t) {
         if (t && t.length) {
           this.createTempContainer();
           var e = t.clone();
-          this.getTempContainer().append(e), this.options.initSizeByHtml(parseInt(_assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.px.toPt(e.width()).toString()), parseInt(_assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.px.toPt(e.height()).toString())), this.removeTempContainer();
+          this.getTempContainer().append(e), this.options.initSizeByHtml(parseInt(hinnn.px.toPt(e.width()).toString()), parseInt(hinnn.px.toPt(e.height()).toString())), this.removeTempContainer();
         }
       }, BasePrintElement.prototype.updateTargetSize = function (t) {
         t.css("width", this.options.displayWidth()), t.css("height", this.options.displayHeight());
@@ -1224,7 +722,7 @@ var hiprint = function (t) {
         var e = this, lastTimeStamp = 0;
         return this.designTarget = this.getHtml(t)[0].target, this.designPaper = t, this.designTarget.click(function (ev) {
           if (ev.timeStamp - lastTimeStamp > 500) {
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger(e.getPrintElementSelectEventKey(), {
+            hinnn.event.trigger(e.getPrintElementSelectEventKey(), {
               printElement: e
             });
           }
@@ -1237,6 +735,7 @@ var hiprint = function (t) {
               e._editing = true;
               e.designTarget.hidraggable('update', {draggable: false});
               c.css("cursor", "text"), c.addClass("editing");
+              e.designTarget.addClass("editing");
               c.click(function (ev) {
                 if (e._editing) {
                   ev.stopPropagation();
@@ -1265,7 +764,8 @@ var hiprint = function (t) {
         var e = this, c = e.designTarget.find(".hiprint-printElement-content");
         if (e._editing) {
           c && c.css("cursor", "") && c.removeClass("editing") && c.removeAttr("contenteditable");
-          var t = c.text(), title = e.options.title + "：";
+          e.designTarget.removeClass("editing");
+          var t = c.text(), title = e.options.title;
           if (t.startsWith(title) && e.options.field) {
             if (t.length > title.length) {
               e.options.testData = t.split("：")[1];
@@ -1276,12 +776,13 @@ var hiprint = function (t) {
           } else {
             e.options.title = t;
           }
+          e.options.title = e.options.title.split("：")[0]
           if (!clear) {
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger(e.getPrintElementSelectEventKey(), {
+            hinnn.event.trigger(e.getPrintElementSelectEventKey(), {
               printElement: e
             });
           }
-          e.updateDesignViewFromOptions(), _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + e.templateId, "编辑修改");
+          e.updateDesignViewFromOptions(), hinnn.event.trigger("hiprintTemplateDataChanged_" + e.templateId, "编辑修改");
           e._editing = false;
           var draggable = e.options.draggable == undefined || true == e.options.draggable;
           e.designTarget.hidraggable('update', {draggable: draggable});
@@ -1298,9 +799,11 @@ var hiprint = function (t) {
           onDrag: function onDrag(t, i, o) {
             // 处理按住 ctrl / command 多选元素
             var els = n.panel.printElements.filter(function (t) {
-              return 'block' == t.designTarget.children().last().css('display') && !t.printElementType.type.includes('table');
+              return ('block' == t.designTarget.children().last().css('display')
+                && t.designTarget.children().last().hasClass('selected')) && !t.printElementType.type.includes('table');
             });
             var isMultiple = els.length > 1;
+            var notSelected = !n.designTarget.children().last().hasClass('selected');
             if (isMultiple) {
               var left = i - n.options.left, top = o - n.options.top;
               els.forEach(function (t) {
@@ -1308,6 +811,9 @@ var hiprint = function (t) {
                   t.designTarget.css("left", t.options.displayLeft()), t.designTarget.css("top", t.options.displayTop());
                 t.createLineOfPosition(e);
               })
+              if (notSelected) {
+                n.updateSizeAndPositionOptions(i, o), n.createLineOfPosition(e);
+              }
             } else {
               n.updateSizeAndPositionOptions(i, o), n.createLineOfPosition(e);
             }
@@ -1318,12 +824,15 @@ var hiprint = function (t) {
           onBeforeDrag: function onBeforeDrag(t) {
             _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.draging = !0, n.designTarget.focus(), n.createLineOfPosition(e);
           },
+          onBeforeSelectAllDrag: function onBeforeSelectAllDrag() {
+            _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.draging = !0, n.designTarget.focus()
+          },
           getScale: function getScale() {
             return n.designPaper.scale || 1;
           },
           onStopDrag: function onStopDrag(t) {
             // 普通元素拖动结束事件history
-            if (_HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.changed) _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "移动");
+            if (_HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.changed) hinnn.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "移动");
             _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.draging = !1,
               _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.changed = !1;
             var els = n.panel.printElements.filter(function (t) {
@@ -1337,11 +846,51 @@ var hiprint = function (t) {
       }, BasePrintElement.prototype.getPrintElementEntity = function (t) {
         return t ? new _entity_PrintElementEntity__WEBPACK_IMPORTED_MODULE_0__.a(void 0, this.options.getPrintElementOptionEntity(), this.printElementType.getPrintElementTypeEntity()) : new _entity_PrintElementEntity__WEBPACK_IMPORTED_MODULE_0__.a(this.printElementType.tid, this.options.getPrintElementOptionEntity());
       }, BasePrintElement.prototype.submitOption = function () {
-        // 右侧选项修改模版数据触发history
-        var t = this, o = this.getConfigOptions();
-        if (o && o.tabs && o.tabs.length) {
-          this.getPrintElementOptionTabs().forEach(function (tab) {
-            tab.list.forEach(function (e) {
+        var els = this.panel.printElements.filter(function (t) {
+            return ('block' == t.designTarget.children().last().css('display')
+              && t.designTarget.children().last().hasClass('selected'))
+              && !t.printElementType.type.includes('table');
+          });
+          els = els.filter(ele => ele.printElementType.type == this.printElementType.type)
+          var t = this, o = this.getConfigOptions();
+          if (o && o.tabs && o.tabs.length) {
+            this.getPrintElementOptionTabs().forEach(function (tab) {
+              // 样式更新要应用到其他选中的同种元素
+              if(tab.name === "样式" && els.length){
+                tab.list.forEach(function (e) {
+                  els.forEach(ele => {
+                    var n = e.getValue(),
+                      r = 'textType' == e.name && ele.options[e.name] !== n,
+                      a = 'axis' == e.name && ele.options[e.name] !== n;
+                    n && "object" == _typeof(n) ? Object.keys(n).forEach(function (e) {
+                      ele.options[e] = n[e];
+                    }) : ele.options[e.name] = n;
+                    if (r) {
+                      ele.setResizePanel()
+                    }
+                    if (a) {
+                      ele.designTarget.hidraggable('update', { axis: n })
+                    }
+                  })
+                })
+              }else{
+                tab.list.forEach(function (e) {
+                  var n = e.getValue(), r = 'textType' == e.name && t.options[e.name] !== n,
+                    a = 'axis' == e.name && t.options[e.name] !== n;
+                  n && "object" == _typeof(n) ? Object.keys(n).forEach(function (e) {
+                    t.options[e] = n[e];
+                  }) : t.options[e.name] = n;
+                  if (r) {
+                    t.setResizePanel()
+                  }
+                  if (a) {
+                    t.designTarget.hidraggable('update', {axis: n})
+                  }
+                })
+              }
+            });
+          } else {
+            this.getPrintElementOptionItems().forEach(function (e) {
               var n = e.getValue(), r = 'textType' == e.name && t.options[e.name] !== n,
                 a = 'axis' == e.name && t.options[e.name] !== n;
               n && "object" == _typeof(n) ? Object.keys(n).forEach(function (e) {
@@ -1353,24 +902,9 @@ var hiprint = function (t) {
               if (a) {
                 t.designTarget.hidraggable('update', {axis: n})
               }
-            })
-          });
-        } else {
-          this.getPrintElementOptionItems().forEach(function (e) {
-            var n = e.getValue(), r = 'textType' == e.name && t.options[e.name] !== n,
-              a = 'axis' == e.name && t.options[e.name] !== n;
-            n && "object" == _typeof(n) ? Object.keys(n).forEach(function (e) {
-              t.options[e] = n[e];
-            }) : t.options[e.name] = n;
-            if (r) {
-              t.setResizePanel()
-            }
-            if (a) {
-              t.designTarget.hidraggable('update', {axis: n})
-            }
-          });
-        }
-        this.updateDesignViewFromOptions(), _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + this.templateId, "元素修改");
+            });
+          }
+          this.updateDesignViewFromOptions(), hinnn.event.trigger("hiprintTemplateDataChanged_" + this.templateId, "元素修改");
       }, BasePrintElement.prototype.updateOption = function (o, v, b) {
         try {
           var e = this.getConfigOptions();
@@ -1388,18 +922,27 @@ var hiprint = function (t) {
             this.options[o] = v;
             this.updateDesignViewFromOptions();
             if (!b) {
-              _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + this.templateId, "参数修改");
+              hinnn.event.trigger("hiprintTemplateDataChanged_" + this.templateId, "参数修改");
             }
           }
+          this._printElementOptionTabs.forEach(tab=>{
+            tab.list.forEach(item=>{
+              if(item.name === o){
+                item.target.find('select')?.val(v.toString())
+                item.target.find('input')?.val(v.toString())
+              }
+            })
+          });
         } catch (e) {
           console.log('updateOption error', e)
         }
       }, BasePrintElement.prototype.getReizeableShowPoints = function () {
-        return ['barcode', 'qrcode'].includes(this.options.textType) ? ["se", "r"] : ["s", "e", "r"];
+        return ['barcode', 'qrcode'].includes(this.options.textType) ? ["se", "s", "e", "r"] : ["s", "e", "r"];
       }, BasePrintElement.prototype.setResizePanel = function () {
         var n = this, e = this.designPaper;
         this.designTarget.hireizeable({
           showPoints: n.getReizeableShowPoints(),
+          draggable: n.options.draggable, // 元素是否可拖拽、删除
           // 是否显示宽高box
           showSizeBox: _HiPrintConfig__WEBPACK_IMPORTED_MODULE_1__.a.instance.showSizeBox,
           getScale: function getScale() {
@@ -1417,7 +960,7 @@ var hiprint = function (t) {
             n.createLineOfPosition(e);
           },
           onStopResize: function onStopResize(r) {
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, r ? "旋转" : "大小");
+            hinnn.event.trigger("hiprintTemplateDataChanged_" + n.templateId, r ? "旋转" : "大小");
             _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.draging = !1, n.removeLineOfPosition();
           }
         })
@@ -1527,7 +1070,7 @@ var hiprint = function (t) {
         return o;
       }, BasePrintElement.prototype.updatePanelHeight = function (h, p) {
         if ("none" == this.panel.panelPageRule) {
-          var nmh = _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.pt.toMm(h);
+          var nmh = hinnn.pt.toMm(h);
           // 更改模板高度 paperType, width(mm), height(mm), rotate
           // this.panel.resize(void 0, t.mmwidth, nmh, !1);
           // 这个会更新模板的高度...
@@ -1537,8 +1080,7 @@ var hiprint = function (t) {
         }
       }, BasePrintElement.prototype.getBeginPrintTopInPaperByReferenceElement = function (t) {
         var e = this.options.getTop();
-        var h = this.options.getHeight();
-        return this.isHeaderOrFooter() || this.isFixed() ? e : t.referenceElement.isPositionLeftOrRight(e, h) ? t.referenceElement.printTopInPaper + (e - t.referenceElement.top) : t.referenceElement.bottomInLastPaper + (e - (t.referenceElement.top + t.referenceElement.height));
+        return this.isHeaderOrFooter() || this.isFixed() ? e : t.referenceElement.isPositionLeftOrRight(e) ? t.referenceElement.printTopInPaper + (e - t.referenceElement.top) : t.referenceElement.bottomInLastPaper + (e - (t.referenceElement.top + t.referenceElement.height));
       }, BasePrintElement.prototype.css = function (t, e) {
         var n = this,
           i = [],
@@ -1791,16 +1333,29 @@ var hiprint = function (t) {
           var copyArea = $('#copyArea');
           if (!copyArea.length) copyArea = $('<textarea id="copyArea" style="position: absolute; left: 0px; top: 0px;opacity: 0"></textarea>');
           $("body").append(copyArea);
-          var json = JSON.stringify({
-            options: n.options,
-            printElementType: n.printElementType,
-            id: n.id,
-            templateId: n.templateId
-          });
+          let copyElements = this.panel.printElements.filter(ele => {
+            return 'block' == ele.designTarget.children().last().css('display') && !ele.printElementType.type.includes('table');
+          })
+          copyElements = copyElements.map(ele => {
+            return {
+              options: ele.options,
+              printElementType: ele.printElementType,
+              id: ele.id,
+              templateId: ele.templateId
+            }
+          })
+          var json = JSON.stringify(copyElements)
+          // var json = JSON.stringify({
+          //   options: n.options,
+          //   printElementType: n.printElementType,
+          //   id: n.id,
+          //   templateId: n.templateId
+          // });
           copyArea.text(json);
           // 元素需可见才能选中复制到剪切板
           copyArea.css('visibility', 'visible');
-          copyArea.focus();
+          // 尝试修复对复制元素的自动聚焦
+          // copyArea.focus();
           if (copyArea.setSelectionRange)
             copyArea.setSelectionRange(0, copyArea.value.length);
           else
@@ -1870,8 +1425,14 @@ var hiprint = function (t) {
           case 46:
             var templete = _HiPrintlib__WEBPACK_IMPORTED_MODULE_6__.a.instance.getPrintTemplateById(n.templateId)
             templete.deletePrintElement(n)
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "删除");
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("clearSettingContainer")
+            hinnn.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "删除");
+            hinnn.event.trigger("clearSettingContainer")
+             // 获取到了template 拿到template里面所有被选中的元素
+             els.forEach(ele=>{
+              templete.deletePrintElement(ele)
+              hinnn.event.trigger("hiprintTemplateDataChanged_" + ele.templateId, "删除");
+            })
+            hinnn.event.trigger("clearSettingContainer")
             break
           case 37:
             i = n.options.getLeft();
@@ -1921,7 +1482,7 @@ var hiprint = function (t) {
             r.preventDefault();
           }
           if ([37, 38, 39, 40].includes(r.keyCode)) {
-            _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_4__.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "键盘移动");
+            hinnn.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "键盘移动");
           }
         });
       }, BasePrintElement.prototype.inRect = function (t) {
@@ -1974,9 +1535,9 @@ var hiprint = function (t) {
     i2 = function () {
       function t() {
       }
-
+      // 表格头双击字段选择
       return t.prototype.init = function (e, i) {
-        var n = '<select class="auto-submit" style="width:100%">\n                <option value="" disabled>请选择字段</option>';
+        var n = `<select class="auto-submit" style="width:100%">\n                <option value="" disabled>${i18n.__('请选择字段')}</option>`;
         e.forEach(function (t, e) {
           if (t.field == i.field) {
             n += ' <option value="' + (t.field || "") + '" selected >' + (t.text || "") + "</option>";
@@ -2064,6 +1625,7 @@ var hiprint = function (t) {
             var n = e.split("#");
             t.title = this.title = n[0], n.length > 0 && (t.columnId = t.field = this.field = n[1]);
             t.id && t.target.attr("id", t.id), t.columnId && t.target.attr("column-id", t.columnId);
+            hinnn.event.trigger("hiprintTemplateDataChanged_" + this.tableOptions.options.templateId, "调整表格列字段");
           } else t.title = this.title = e;
         } else this.tableOptions.options.isEnableEditField ? (t.title = this.title = "", t.field = this.field = "") : t.title = this.title = "";
         this.editor.destroy(), t.getTarget().html(this.title);
@@ -2071,7 +1633,7 @@ var hiprint = function (t) {
     }(),
     u = function () {
       return function (t) {
-        this.title = t.title, this.field = t.field, this.width = t.width, this.align = t.align, this.halign = t.halign, this.vAlign = t.vAlign, this.colspan = t.colspan, this.rowspan = t.rowspan, this.checked = t.checked, this.columnId = t.columnId, this.tableSummaryTitle = t.tableSummaryTitle, this.tableSummaryText = t.tableSummaryText, this.tableSummary = t.tableSummary, this.tableSummaryAlign = t.tableSummaryAlign, this.tableSummaryNumFormat = t.tableSummaryNumFormat, this.upperCase = t.upperCase, this.renderFormatter = t.renderFormatter, this.formatter2 = t.formatter2, this.styler2 = t.styler2, this.tableColumnHeight = t.tableColumnHeight, this.tableTextType = t.tableTextType, this.tableBarcodeMode = t.tableBarcodeMode, this.tableQRCodeLevel = t.tableQRCodeLevel;
+        this.title = t.title, this.field = t.field, this.width = t.width, this.align = t.align, this.halign = t.halign, this.vAlign = t.vAlign, this.colspan = t.colspan, this.rowspan = t.rowspan, this.checked = t.checked, this.columnId = t.columnId, this.tableSummaryTitle = t.tableSummaryTitle, this.tableSummaryText = t.tableSummaryText, this.tableSummaryColspan = t.tableSummaryColspan, this.tableSummary = t.tableSummary, this.tableSummaryAlign = t.tableSummaryAlign, this.tableSummaryNumFormat = t.tableSummaryNumFormat, this.tableSummaryFormatter = t.tableSummaryFormatter, this.showCodeTitle = t.showCodeTitle, this.upperCase = t.upperCase, this.renderFormatter = t.renderFormatter && t.renderFormatter.toString(), this.formatter2 = t.formatter2 && t.formatter2.toString(), this.styler2 = t.styler2 && t.styler2.toString(), this.stylerHeader = t.stylerHeader && t.stylerHeader.toString(), this.tableColumnHeight = t.tableColumnHeight, this.tableTextType = t.tableTextType, this.tableBarcodeMode = t.tableBarcodeMode, this.tableQRCodeLevel = t.tableQRCodeLevel
       };
     }(),
     d = function () {
@@ -2173,7 +1735,8 @@ var hiprint = function (t) {
     f = function (t) {
       function e(e) {
         var n = this;
-        return e = e || {}, (n = t.call(this) || this).width = e.width ? parseFloat(e.width.toString()) : 100, n.title = e.title, n.descTitle = e.descTitle, n.field = e.field, n.fixed = e.fixed, n.rowspan = e.rowspan ? parseInt(e.rowspan) : 1, n.colspan = e.colspan ? parseInt(e.colspan) : 1, n.align = e.align, n.halign = e.halign, n.vAlign = e.vAlign, n.formatter = e.formatter, n.styler = e.styler, n.renderFormatter = e.renderFormatter, n.formatter2 = e.formatter2, n.styler2 = e.styler2, n.checkbox = e.checkbox, n.checked = 0 != e.checked, n.columnId = e.columnId || e.field, n.tableColumnHeight = e.tableColumnHeight || 30, n.tableTextType = e.tableTextType || 'text', n.tableBarcodeMode = e.tableBarcodeMode || 'CODE128A', n.tableQRCodeLevel = e.tableQRCodeLevel, n.tableSummaryTitle = e.tableSummaryTitle, n.tableSummaryText = e.tableSummaryText, n.tableSummary = e.tableSummary, n.tableSummaryAlign = e.tableSummaryAlign, n.tableSummaryNumFormat = e.tableSummaryNumFormat, n.upperCase = e.upperCase, n;
+        return e = e || {}, (n = t.call(this) || this).width = e.width ? parseFloat(e.width.toString()) : 100, n.title = e.title, n.descTitle = e.descTitle, n.field = e.field, n.fixed = e.fixed, n.rowspan = e.rowspan ? parseInt(e.rowspan) : 1, n.colspan = e.colspan ? parseInt(e.colspan) : 1, n.align = e.align, n.halign = e.halign, n.vAlign = e.vAlign, n.formatter = e.formatter, n.styler = e.styler, n.renderFormatter = e.renderFormatter, n.formatter2 = e.formatter2, n.styler2 = e.styler2, n.stylerHeader = e.stylerHeader, n.checkbox = e.checkbox, n.checked = 0 != e.checked, n.columnId = e.columnId || e.field, n.tableColumnHeight = e.tableColumnHeight, n.tableTextType = e.tableTextType, n.tableBarcodeMode = e.tableBarcodeMode, n.tableQRCodeLevel = e.tableQRCodeLevel, n.tableSummaryTitle = e.tableSummaryTitle, n.tableSummaryText = e.tableSummaryText, n.tableSummaryColspan = e.tableSummaryColspan, n.tableSummary = e.tableSummary, n.tableSummaryAlign = e.tableSummaryAlign, n.tableSummaryNumFormat = e.tableSummaryNumFormat, n.tableSummaryFormatter = e.tableSummaryFormatter,
+        n.showCodeTitle = e.showCodeTitle, n.upperCase = e.upperCase, n;
       }
 
       return h(e, t), e.prototype.css = function (t) {
@@ -2205,20 +1768,30 @@ var hiprint = function (t) {
       }
 
       return TableExcelHelper.createTableHead = function (t, e) {
-        for (var n = TableExcelHelper.reconsitutionTableColumnTree(t), i = $("<thead></thead>"), o = TableExcelHelper.getColumnsWidth(n, e), r = function r(t) {
+        for (var n = TableExcelHelper.reconsitutionTableColumnTree(t), i = $("<thead></thead>"), colgroup = $("<colgroup></colgroup>"), o = TableExcelHelper.getColumnsWidth(n, e), r = function r(t) {
           var e = $("<tr></tr>");
+          // 重置 colgroup，解决多行表头 col 添加错误问题，仅以最后一行添加
+          colgroup = $("<colgroup></colgroup>");
           n[t].filter(function (t) {
             return t.checked;
           }).forEach(function (t) {
             var n = $("<td></td>");
-            t.id && n.attr("id", t.id), t.columnId && n.attr("column-id", t.columnId), (t.align || t.halign) && n.css("text-align", t.halign || t.align), t.vAlign && n.css("vertical-align", t.vAlign), t.colspan > 1 && n.attr("colspan", t.colspan), t.rowspan > 1 && n.attr("rowspan", t.rowspan), n.html(t.title), o[t.id] ? (t.hasWidth = !0, t.targetWidth = o[t.id], n.attr("haswidth", "haswidth"), n.css("width", o[t.id] + "pt")) : t.hasWidth = !1, e.append(n);
+            t.id && n.attr("id", t.id), t.columnId && n.attr("column-id", t.columnId), (t.align || t.halign) && n.css("text-align", t.halign || t.align), t.vAlign && n.css("vertical-align", t.vAlign), t.colspan > 1 && n.attr("colspan", t.colspan), t.rowspan > 1 && n.attr("rowspan", t.rowspan), n.html(t.title), o[t.id] ? (t.hasWidth = !0, t.targetWidth = o[t.id], n.attr("haswidth", "haswidth"), n.css("width", o[t.id] + "pt")) : t.hasWidth = !1;
+            var s = TableExcelHelper.getHeaderStyler(t);
+            if (s) {
+              var l = s(t);
+              if (l) Object.keys(l).forEach(function (t) {
+                n.css(t, l[t]);
+              });
+            }
+            e.append(n);
+            colgroup.append(`<col column-id="${t.columnId}" width="${t.width}pt"></col>`)
           }), i.append(e);
         }, a = 0; a < n.totalLayer; a++) {
           r(a);
         }
-
-        return TableExcelHelper.syncTargetWidthToOption(t), i;
-      }, TableExcelHelper.createTableFooter = function (t, e, n, i, o, r) {
+        return TableExcelHelper.syncTargetWidthToOption(t), [i, colgroup];
+      }, TableExcelHelper.createTableFooter = function (t, e, n, i, o, r, pageIndex) {
         // n=>options e=>表格所有数据 o=>所有打印数据 r=>表格每页数据
         var a = $("<tfoot></tfoot>"), p = this.getFooterFormatter(n, i);
         var tst = this.tableSummaryTitle;
@@ -2231,27 +1804,35 @@ var hiprint = function (t) {
             return t.checked;
           }).forEach(function (column) {
             var fieldData = tSumData.filter(function (row) {
-              return row[column.field];
+              return row && row[column.field];
             }).map(function (row) {
               return new RegExp("^-?(0|[1-9]\\d*)(\\.\\d+)?").test(row[column.field]) ? Number(row[column.field]) : 0;
             });
             var text = column.tableSummaryText;
             var numF = column.tableSummaryNumFormat || 2;
+            var style = `text-align: ${column.tableSummaryAlign || "center"}`;
+            var colspan = column.tableSummaryColspan == void 0 ? 1 : column.tableSummaryColspan;
             var upperCaseType = column.upperCase;
             let {toUpperCase, numFormat} = _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_1__.a;
+            var tableSummaryFormatter = TableExcelHelper.getColumnTableSummaryFormatter(column);
+            var formatterResult = tableSummaryFormatter ? tableSummaryFormatter(column, fieldData, e, n) : '';
+            if (formatterResult) {
+              tableFooter.append(formatterResult);
+              return;
+            }
             switch (column.tableSummary) {
             case "count":
-              var title = tst(column, text || "计数:", o);
-              var count = toUpperCase(upperCaseType,tSumData.length || 0);
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${title}${count}</td>`);
+              var title = tst(column, text || `${i18n.__('计数')}:`, o);
+              var count = toUpperCase(upperCaseType,tSumData.filter(i => i).length || 0);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${title}${count}</td>`);
               break;
             case "sum":
               var sum = parseFloat(Number(fieldData.reduce(function (prev, cur) {
                 return prev + cur;
               }, 0)));
               sum = toUpperCase(upperCaseType,numFormat(sum, numF));
-              var title = tst(column, text || "合计:", o);
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${title}${sum}</td>`)
+              var title = tst(column, text || `${i18n.__('合计')}:`, o);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${title}${sum}</td>`)
               break;
             case "avg":
               var sum = parseFloat(Number(fieldData.reduce(function (prev, cur) {
@@ -2259,65 +1840,91 @@ var hiprint = function (t) {
               }, 0)));
               var avg = parseFloat(Number(sum / (fieldData.length || 1)));
               avg = toUpperCase(upperCaseType,numFormat(avg, numF));
-              var title = tst(column, text || "平均值:", o);
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${title}${avg}</td>`)
+              var title = tst(column, text || `${i18n.__('平均值')}:`, o);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${title}${avg}</td>`)
               break;
             case "min":
-              var min = Math.min(...fieldData);
+              var min = Math.min(...fieldData) || 0;
+              min == Infinity && (min = 0);
               min = toUpperCase(upperCaseType,numFormat(min, numF));
-              var title = tst(column, text || "最小值:", o);
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${title}${min || 0}</td>`)
+              var title = tst(column, text || `${i18n.__('最小值')}:`, o);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${title}${min || 0}</td>`)
               break;
             case "max":
               var max = Math.max(...fieldData);
+              max == -Infinity && (max = 0);
               max = toUpperCase(upperCaseType,numFormat(max, numF));
-              var title = tst(column, text || "最大值:", o);
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${title}${max || 0}</td>`);
+              var title = tst(column, text || `${i18n.__('最大值')}:`, o);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${title}${max || 0}</td>`);
               break;
             case "text":
-              tableFooter.append(`<td style="text-align: ${column.tableSummaryAlign || "center"}">${text || ""}</td>`);
+              tableFooter.append(`<td style="${style}" colspan="${colspan}">${text || ""}</td>`);
               break;
             default:
-              tableFooter.append("<td></td>")
+              if (colspan >= 1) {
+                tableFooter.append(`<td style="${style}" colspan="${colspan}">${text || ""}</td>`)
+              }
               break;
             }
           })
           a.append(tableFooter);
         }
         if (p) {
-          a.append(p(n, e, o, r));
+          // pageIndex: 当前页码(0开始) 如果表格脚最后页显示,则中间回调 undefined
+          a.append(p(n, e, o, r, pageIndex));
         }
         return a;
       }, TableExcelHelper.tableSummaryTitle = function (column, title, data) {
         var s = column.tableSummaryTitle == undefined || column.tableSummaryTitle == true;
         return s ? `${title}` : data ? `` : `<span style="color:firebrick">${title}</span>`;
-      }, TableExcelHelper.createTableRow = function (t, e, n, i) {
+      }, TableExcelHelper.createTableRow = function (t, e, printData, n, i) {
+        var h = this;
         var o = TableExcelHelper.reconsitutionTableColumnTree(t),
           r = $("<tbody></tbody>");
-        (e || (e = []), i.groupFields.length) ? _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_1__.a.groupBy(e, i.groupFields, function (t) {
+        var gff = h.getGroupFieldsFormatter(n, i);
+        var groupRowIndex = 0;
+        var groupFields = gff ? (n.groupFields = gff(i, n, e)) : i.groupFields ? i.groupFields : [];
+        e = Array.isArray(e) ? e : [];
+        groupFields.length ? _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_1__.a.groupBy(e, groupFields, function (t) {
           var e = {};
-          return i.groupFields.forEach(function (n) {
+          return groupFields.forEach(function (n) {
             return e[n] = t[n];
           }), e;
         }).forEach(function (t) {
-          if (i.groupFormatter) {
-            var e = $("<tr><td colspan=" + o.colspan + "></td></tr>");
-            e.find("td").append(i.groupFormatter(t, n)), r.append(e);
+          var groupFormatter = h.getGroupFormatter(n, i);
+          if (groupFormatter) {
+            let result = groupFormatter(o.colspan, e, printData, t, n)
+            if ($(result).is("tr")) {
+              r.append(result)
+            } else if ($(result).is("td")) {
+              r.append(`<tr>${result}</tr>`)
+            } else {
+              r.append(`<tr><td>${result}</td></tr>`)
+            }
           }
-
-          if (t.rows.forEach(function (t, rowIndex) {
-            var e = TableExcelHelper.createRowTarget(o, t, n, i, rowIndex);
+          var groupFooterFormatter = h.getGroupFooterFormatter(n, i);
+          var groupData = t;
+          if (groupData.rows.forEach(function (t, rowIndex) {
+            let sequenceIndex = n.groupSequenceContinue ? groupRowIndex : rowIndex;
+            var e = TableExcelHelper.createRowTarget(o, t, n, i, sequenceIndex, groupData.rows, printData);
             r.append(e);
-          }), i.groupFooterFormatter) {
-            var a = $("<tr><td colspan=" + o.colspan + "></td></tr>");
-            a.find("td").append(i.groupFooterFormatter(t, n)), r.append(a);
+            groupRowIndex += 1;
+          }), groupFooterFormatter) {
+            let result = groupFooterFormatter(o.colspan, e, printData, t, n)
+            if ($(result).is("tr")) {
+              r.append(result)
+            } else if ($(result).is("td")) {
+              r.append(`<tr>${result}</tr>`)
+            } else {
+              r.append(`<tr><td>${result}</td></tr>`)
+            }
           }
         }) : e.forEach(function (t, rowIndex) {
-          var e = TableExcelHelper.createRowTarget(o, t, n, i, rowIndex);
-          r.append(e);
+          var row = TableExcelHelper.createRowTarget(o, t, n, i, rowIndex, e, printData);
+          r.append(row);
         });
         return r;
-      }, TableExcelHelper.createRowTarget = function (t, e, n, i, rowIndex) {
+      }, TableExcelHelper.createRowTarget = function (t, e, n, i, rowIndex, tableData, printData) {
         var o = $("<tr></tr>");
         var columns = t.rowColumns.filter(function (t) {
           return t.checked;
@@ -2329,7 +1936,7 @@ var hiprint = function (t) {
           var rowsColumnsMerge = ''
           if (n.rowsColumnsMerge) {
             eval('rowsColumnsMerge=' + n.rowsColumnsMerge)
-            var rowsColumnsArr = rowsColumnsMerge(e, t, i) || [1, 1]
+            var rowsColumnsArr = rowsColumnsMerge(e, t, i, rowIndex, tableData, printData) || [1, 1]
             var r = $(`<td style = 'display:${!(rowsColumnsArr[0] && rowsColumnsArr[1]) ? "none" : ""}' rowspan = '${rowsColumnsArr[0]}' colspan = '${rowsColumnsArr[1]}'></td>`);
           } else {
             var r = $("<td></td>");
@@ -2356,9 +1963,9 @@ var hiprint = function (t) {
             p = a ? a(e[t.field], e, i, n) : e[t.field];
           var rf = TableExcelHelper.getColumnRenderFormatter(t);
           if (rf) {
-            r.html(rf(e[t.field], e, i, n))
+            r.html(rf(e[t.field], e, i, n, rowIndex))
           //表格内容插入二维码等
-          } else if ("text" == t.tableTextType) r.html(p);
+          } else if ("text" == t.tableTextType || t.tableTextType == void 0) r.html(p);
           else {
             if ("barcode" == t.tableTextType) {
               r.html(
@@ -2366,17 +1973,20 @@ var hiprint = function (t) {
               );
               try {
                 p ? (JsBarcode(r.find(".hibarcode_imgcode")[0], p, {
-                  format: t.tableBarcodeMode,
+                  format: t.tableBarcodeMode || "CODE128A",
                   width: 1,
                   textMargin: -1,
                   lineColor: "#000000",
                   margin: 0,
                   height: parseInt(10),
                   displayValue: !1
-                }), r.find(".hibarcode_imgcode").attr("height", t.tableColumnHeight + 'pt'), r.find(".hibarcode_imgcode").css("margin", '5pt 10pt'), r.find(".hibarcode_imgcode").attr("width", "calc(100% - 20pt)")) : r.html("");
+                }), r.find(".hibarcode_imgcode").attr("height", t.tableColumnHeight || 30 + 'pt'), r.find(".hibarcode_imgcode").css("margin", '5pt 10pt'), r.find(".hibarcode_imgcode").attr("width", "calc(100% - 20pt)")) : r.html("");
                 // this.options.hideTitle || r.find(".hibarcode_displayValue").html(n)
+                if (t.showCodeTitle) {
+                    r.find('.hibarcode_displayValue').html(p)
+                }
               } catch (t) {
-                console.log(t), r.html("此格式不支持该文本");
+                console.log(t), r.html(`${i18n.__('此格式不支持该文本')}`);
               }
             }
             if ("image" == t.tableTextType) {
@@ -2385,6 +1995,7 @@ var hiprint = function (t) {
 
                 var imagebox = $('<div><img style = "max-width:100%;max-height:100%"/></div>')
                 imagebox.find('img').attr('src', p)
+                imagebox.find('img').attr("height", t.tableColumnHeight || 50 + 'pt')
                 console.log(imagebox.find('img').css('width'))
                 r.html(imagebox)
               }
@@ -2393,7 +2004,7 @@ var hiprint = function (t) {
             if ("qrcode" == t.tableTextType) {
               r.html("");
               try {
-                var qrcodebox = $('<div></div>')
+                var qrcodebox = $('<div style="margin:2pt 0pt" class="hiqrcode_imgcode"></div>')
 
                 if (p) {
                   var l = parseInt(t.width || t.targetWidth || 20),
@@ -2404,12 +2015,19 @@ var hiprint = function (t) {
                     height: l > u ? u : l,
                     colorDark: "#000000",
                     useSVG: !0,
-                    correctLevel: t.tableQRCodeLevel
+                    correctLevel: t.tableQRCodeLevel || 0,
                   }).makeCode(p);
+                  // r.find(".hiqrcode_imgcode").css("margin", '5pt 0pt'),
                   r.html(qrcodebox)
+                  if(t.showCodeTitle) {
+                  r.append(
+                      '<div class="hiqrcode_displayValue"></div>'
+                    )
+                  r.find('.hiqrcode_displayValue').html(p)
+                  }
                 }
               } catch (t) {
-                console.log(t), r.html("二维码生成失败");
+                console.log(t), r.html(`${i18n.__('二维码生成失败')}`);
               }
             }
             if ('sequence' === t.tableTextType) {
@@ -2437,15 +2055,19 @@ var hiprint = function (t) {
         }
 
         return o;
-      }, TableExcelHelper.createEmptyRowTarget = function (t) {
+      }, TableExcelHelper.createEmptyRowTarget = function (t, tableElement) {
         var e = TableExcelHelper.reconsitutionTableColumnTree(t),
-          n = $("<tr></tr>");
-        return e.rowColumns.filter(function (t) {
+            n = $("<tr></tr>");
+        e.rowColumns.filter(function (t) {
           return t.checked;
         }).forEach(function (t, e) {
           var i = $("<td></td>");
           t.field && i.attr("field", t.field), t.align && i.css("text-align", t.align), t.vAlign && i.css("vertical-align", t.vAlign), n.append(i);
-        }), n;
+        });
+        if (tableElement && tableElement.options.tableBodyRowHeight) {
+          n.find('td:not([rowspan])').css('height', tableElement.options.tableBodyRowHeight + 'pt');
+        }
+        return n;
       }, TableExcelHelper.getColumnsWidth = function (t, e) {
         var n = {},
           i = TableExcelHelper.allAutoWidth(t),
@@ -2468,18 +2090,20 @@ var hiprint = function (t) {
           $(e).css("width", i + "pt");
         });
       }, TableExcelHelper.allAutoWidth = function (t) {
-        var e = 0;
+        var e = 0, n = {};
         return t.rowColumns.filter(function (t) {
           return t.checked;
         }).forEach(function (t) {
-          e += t.fixed ? 0 : t.width;
+          n[t.id] ? n[t.id] = 0 : n[t.id] = t.width;
+          e += t.fixed ? 0 : n[t.id];
         }), e;
       }, TableExcelHelper.allFixedWidth = function (t) {
-        var e = 0;
+        var e = 0, n = {};;
         return t.rowColumns.filter(function (t) {
           return t.checked;
         }).forEach(function (t) {
-          e += t.fixed ? t.width : 0;
+          n[t.id] ? n[t.id] = 0 : n[t.id] = t.width;
+          e += t.fixed ? n[t.id] : 0;
         }), e;
       }, TableExcelHelper.reconsitutionTableColumnTree = function (t, e, n) {
         var i = e || new _ReconsitutionTableColumns__WEBPACK_IMPORTED_MODULE_0__.a();
@@ -2500,6 +2124,37 @@ var hiprint = function (t) {
             t.hasWidth && (t.width = t.targetWidth);
           });
         });
+      }, TableExcelHelper.getGroupFieldsFormatter = function (options, tablePrintElementType) {
+        var groupFieldsFormatter = void 0;
+        if (tablePrintElementType.groupFields && tablePrintElementType.groupFields.length) {
+          var arr = typeof tablePrintElementType.groupFields == "string" ? tablePrintElementType.groupFields : JSON.stringify(tablePrintElementType.groupFields);
+          options.groupFieldsFormatter = "function(type,options,data){ return " + arr + " }";
+        }
+        if (tablePrintElementType.groupFieldsFormatter && (groupFieldsFormatter = tablePrintElementType.groupFieldsFormatter), options.groupFieldsFormatter) try {
+          var s = "groupFieldsFormatter=" + options.groupFieldsFormatter;
+          eval(s);
+        } catch (t) {
+          console.log(t);
+        }
+        return groupFieldsFormatter;
+      }, TableExcelHelper.getGroupFormatter = function (options, tablePrintElementType) {
+        var groupFormatter = void 0;
+        if (tablePrintElementType.groupFormatter && (groupFormatter = tablePrintElementType.groupFormatter), options.groupFormatter) try {
+          var s = "groupFormatter=" + options.groupFormatter;
+          eval(s);
+        } catch (t) {
+          console.log(t);
+        }
+        return groupFormatter;
+      }, TableExcelHelper.getGroupFooterFormatter = function (options, tablePrintElementType) {
+        var groupFooterFormatter = void 0;
+        if (tablePrintElementType.groupFooterFormatter && (groupFooterFormatter = tablePrintElementType.groupFooterFormatter), options.groupFooterFormatter) try {
+          var s = "groupFooterFormatter=" + options.groupFooterFormatter;
+          eval(s);
+        } catch (t) {
+          console.log(t);
+        }
+        return groupFooterFormatter;
       }, TableExcelHelper.getFooterFormatter = function (options, tablePrintElementType) {
         var footerFormatter = void 0;
         if (tablePrintElementType.footerFormatter && (footerFormatter = tablePrintElementType.footerFormatter), options.footerFormatter) try {
@@ -2518,6 +2173,15 @@ var hiprint = function (t) {
           console.log(t);
         }
         return rowStyler;
+      }, TableExcelHelper.getColumnTableSummaryFormatter = function (column) {
+        var tableSummaryFormatter = void 0;
+        if (column.tableSummaryFormatter && (tableSummaryFormatter = column.tableSummaryFormatter), column.tableSummaryFormatter) try {
+          var s = "tableSummaryFormatter=" + column.tableSummaryFormatter;
+          eval(s);
+        } catch (t) {
+          console.log(t);
+        }
+        return tableSummaryFormatter;
       }, TableExcelHelper.getColumnStyler = function (column) {
         var styler = void 0;
         if (column.styler && (styler = column.styler), column.styler2) try {
@@ -2527,6 +2191,15 @@ var hiprint = function (t) {
           console.log(t);
         }
         return styler;
+      }, TableExcelHelper.getHeaderStyler = function (column) {
+        var stylerHeader = void 0;
+        if (column.stylerHeader && (stylerHeader = column.stylerHeader), column.stylerHeader) try {
+          var s = "stylerHeader=" + column.stylerHeader;
+          eval(s);
+        } catch (t) {
+          console.log(t);
+        }
+        return stylerHeader;
       }, TableExcelHelper.getColumnRenderFormatter = function (column) {
         var renderFormatter = void 0;
         if (column.renderFormatter && (renderFormatter = column.renderFormatter), column.renderFormatter) try {
@@ -2563,10 +2236,25 @@ var hiprint = function (t) {
             }
           });
         }
-        console.log('原始数据');
-        console.log(t);
-        console.log('数据源');
-        console.log(newColumns);
+        // 把上层/其他层的 field 赋值给最下层
+        let lastColumns = [];
+        for (let i = 0; i < t.totalLayer; i++) {
+          if (i >= t.totalLayer - 1) {
+            newColumns[i].forEach((column, columnIdx) => {
+              if (!column.field) {
+                 column.field = lastColumns[columnIdx];
+              }
+            })
+          } else {
+            newColumns[i].forEach((column, columnIdx) => {
+              if (i == 0) {
+                lastColumns.push(column.field || "");
+              } else {
+                column.field && (lastColumns[columnIdx] = column.field);
+              }
+            })
+          }
+        }
         this.rowColumns = newColumns[t.totalLayer - 1];
         return newColumns[t.totalLayer - 1];
       }, TableExcelHelper;
@@ -2583,8 +2271,8 @@ var hiprint = function (t) {
       this.top = t.top, this.left = t.left, this.height = t.height, this.width = t.width, this.bottomInLastPaper = t.bottomInLastPaper, this.beginPrintPaperIndex = t.beginPrintPaperIndex, this.printTopInPaper = t.printTopInPaper, this.endPrintPaperIndex = t.endPrintPaperIndex;
     }
 
-    return t.prototype.isPositionLeftOrRight = function (t, h) {
-      return this.top <= t && this.top > t && this.beginPrintPaperIndex == this.endPrintPaperIndex;
+    return t.prototype.isPositionLeftOrRight = function (t) {
+      return this.top <= t && this.top + this.height > t;
     }, t;
   }();
 }, function (t, e, n) {
@@ -2603,7 +2291,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体行高\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体行高')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -2618,16 +2306,15 @@ var hiprint = function (t) {
       function t() {
         this.name = "fontFamily";
       }
-
       return t.prototype.createTarget = function (t) {
         var e = void 0;
         if (t && (e = t.getFontList()), e) {
-          var n = ' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>';
+          var n = `<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>`;
           e.forEach(function (t, e) {
             n += ' <option value="' + (t.value || "") + '" >' + (t.title || "") + "</option>";
           }), n += " </select>\n            </div>\n        </div>", this.target = $(n);
         } else {
-          this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="SimSun" >宋体</option>\n            <option value="Microsoft YaHei" >微软雅黑</option>\n        </select>\n        </div>\n    </div>');
+          this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="SimSun" >${i18n.__('宋体')}</option>\n            <option value="Microsoft YaHei" >${i18n.__('微软雅黑')}</option>\n        </select>\n        </div>\n    </div>`);
         }
         return this.target;
       }, t.prototype.css = function (t, e) {
@@ -2659,7 +2346,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体大小\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体大小')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -2683,7 +2370,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体粗细\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="lighter" >更细</option>\n        <option value="bold" >粗体</option>\n        <option value="bolder" >粗体+</option>\n            <option value="100" >100</option>\n            <option value="200" >200</option>\n            <option value="300" >300</option>\n            <option value="400" >400</option>\n            <option value="500" >500</option>\n            <option value="600" >600</option>\n            <option value="700" >700</option>\n            <option value="800" >800</option>\n            <option value="900" >900</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体粗细')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="lighter" >${i18n.__('更细')}</option>\n        <option value="bold" >${i18n.__('粗体')}</option>\n        <option value="bolder" >${i18n.__('粗体+')}</option>\n            <option value="100" >100</option>\n            <option value="200" >200</option>\n            <option value="300" >300</option>\n            <option value="400" >400</option>\n            <option value="500" >500</option>\n            <option value="600" >600</option>\n            <option value="700" >700</option>\n            <option value="800" >800</option>\n            <option value="900" >900</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2698,16 +2385,14 @@ var hiprint = function (t) {
       function t() {
         this.name = "letterSpacing";
       }
-
       return t.prototype.css = function (t, e) {
         if (t && t.length) {
           if (e) return t.css("letter-spacing", e + "pt"), "letter-spacing:" + e + "pt";
           t[0].style.letterSpacing = "";
         }
-
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字间距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字间距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -2722,7 +2407,6 @@ var hiprint = function (t) {
       function t() {
         this.name = "textAlign";
       }
-
       return t.prototype.css = function (t, e) {
         if (t && t.length) {
           if (e) return t.css("text-align", e), "justify" == e ? (t.css("text-align-last", "justify"), t.css("text-justify", "distribute-all-lines")) : (t[0].style.textAlignLast = "", t[0].style.textJustify = ""), "text-align:" + e;
@@ -2731,7 +2415,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        左右对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="" >居左</option>\n        <option value="center" >居中</option>\n        <option value="right" >居右</option>\n        <option value="justify" >两端对齐</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('左右对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="left" >${i18n.__('居左')}</option>\n        <option value="center" >${i18n.__('居中')}</option>\n        <option value="right" >${i18n.__('居右')}</option>\n        <option value="justify" >${i18n.__('两端对齐')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2747,7 +2431,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        标题显示隐藏\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="false" >显示</option>\n            <option value="true" >隐藏</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('标题显示隐藏')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="false" >${i18n.__('显示')}</option>\n            <option value="true" >${i18n.__('隐藏')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("true" == this.target.find("select").val()) return !0;
       }, t.prototype.setValue = function (t) {
@@ -2769,7 +2453,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表格边框\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >默认</option>\n            <option value="border" >有边框</option>\n            <option value="noBorder" >无边框</option>\n            </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >${i18n.__('默认')}</option>\n            <option value="border" >${i18n.__('有边框')}</option>\n            <option value="noBorder" >${i18n.__('无边框')}</option>\n            </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2786,15 +2470,13 @@ var hiprint = function (t) {
 
       return t.prototype.css = function (t, e) {
         if (t.find("thead tr").length) {
-          if ("border" == e || void 0 == e) return t.find("thead tr").css("border", "1px solid"), "border:1pt solid";
-          "noBorder" == e ? t.find("thead tr").css("border", "0px solid") : "topBorder" == e ? (t.find("thead tr").css("border", "0px solid"), t.find("thead tr").css("border-top", "1px solid")) : "bottomBorder" == e ? (t.find("thead tr").css("border", "0px solid"), t.find("thead tr").css("border-bottom", "1px solid")) : "topBottomBorder" == e ? (t.find("thead tr").css("border", "0px solid"), t.find("thead tr").css("border-top", "1px solid"), t.find("thead tr").css("border-bottom", "1px solid")) : t.find("thead tr").map(function (t, e) {
-            e.style.border = "";
-          });
+          if ("border" == e || void 0 == e) return t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-all");
+          "noBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-none") : "leftBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-left") : "rightBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-right") : "leftRightBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-lr") : "topBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-top") : "bottomBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-bottom") : "topBottomBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-tb") : t.find("thead tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>    \n        <option value="border" >有边框</option>\n        <option value="noBorder" >无边框</option>\n        <option value="topBorder" >上边框</option>\n        <option value="bottomBorder" >下边框</option>\n        <option value="topBottomBorder" >上下边框</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>    \n        <option value="border" >${i18n.__('有边框')}</option>\n        <option value="noBorder" >${i18n.__('无边框')}</option>\n        <option value="leftBorder" >${i18n.__('左边框')}</option>\n        <option value="rightBorder" >${i18n.__('右边框')}</option>\n        <option value="leftRightBorder" >${i18n.__('左右边框')}</option>\n        <option value="topBorder" >${i18n.__('上边框')}</option>\n        <option value="bottomBorder" >${i18n.__('下边框')}</option>\n        <option value="topBottomBorder" >${i18n.__('上下边框')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2810,16 +2492,14 @@ var hiprint = function (t) {
       }
 
       return t.prototype.css = function (t, e) {
-        if (t.find("thead tr td").length) {
-          if ("border" == e || void 0 == e) return t.find("thead tr td").css("border", "1px solid"), "border:1px solid";
-          "noBorder" == e ? t.find("thead tr td").css("border", "0px solid") : t.find("thead tr td").map(function (t, e) {
-            e.style.border = "";
-          });
+        if (t.find("thead tr").length) {
+          if ("border" == e || void 0 == e) return t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-td-all");
+          "noBorder" == e ? t.find("thead tr").addClass("hiprint-printElement-tableTarget-border-td-none") : t.find("thead tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头单元格边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>    \n        <option value="border" >有边框</option>\n        <option value="noBorder" >无边框</option>\n      \n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头单元格边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>    \n        <option value="border" >${i18n.__('有边框')}</option>\n        <option value="noBorder" >${i18n.__('无边框')}</option>\n      \n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2836,15 +2516,13 @@ var hiprint = function (t) {
 
       return t.prototype.css = function (t, e) {
         if (t.find("tfoot tr").length) {
-          if ("border" == e || void 0 == e) return t.find("tfoot tr").css("border", "1px solid"), "border:1pt solid";
-          "noBorder" == e ? t.find("tfoot tr").css("border", "0px solid") : "topBorder" == e ? (t.find("tfoot tr").css("border", "0px solid"), t.find("tfoot tr").css("border-top", "1px solid")) : "bottomBorder" == e ? (t.find("tfoot tr").css("border", "0px solid"), t.find("tfoot tr").css("border-bottom", "1px solid")) : "topBottomBorder" == e ? (t.find("tfoot tr").css("border", "0px solid"), t.find("tfoot tr").css("border-top", "1px solid"), t.find("tfoot tr").css("border-bottom", "1px solid")) : t.find("tfoot tr").map(function (t, e) {
-            e.style.border = "";
-          });
+          if ("border" == e || void 0 == e) return t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-all");
+          "noBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-none") : "leftBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-left") : "rightBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-right") : "leftRightBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-lr") : "topBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-top") : "bottomBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-bottom") : "topBottomBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-tb") : t.find("tfoot tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表尾边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>    \n        <option value="border" >有边框</option>\n        <option value="noBorder" >无边框</option>\n        <option value="topBorder" >上边框</option>\n        <option value="bottomBorder" >下边框</option>\n        <option value="topBottomBorder" >上下边框</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表尾边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>    \n        <option value="border" >${i18n.__('有边框')}</option>\n        <option value="noBorder" >${i18n.__('无边框')}</option>\n        <option value="leftBorder" >${i18n.__('左边框')}</option>\n        <option value="rightBorder" >${i18n.__('右边框')}</option>\n        <option value="leftRightBorder" >${i18n.__('左右边框')}</option>\n        <option value="topBorder" >${i18n.__('上边框')}</option>\n        <option value="bottomBorder" >${i18n.__('下边框')}</option>\n        <option value="topBottomBorder" >${i18n.__('上下边框')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2860,16 +2538,14 @@ var hiprint = function (t) {
       }
 
       return t.prototype.css = function (t, e) {
-        if (t.find("tfoot tr td").length) {
-          if ("border" == e || void 0 == e) return t.find("tfoot tr td").css("border", "1px solid"), "border:1px solid";
-          "noBorder" == e ? t.find("tfoot tr td").css("border", "0px solid") : t.find("tfoot tr td").map(function (t, e) {
-            e.style.border = "";
-          });
+        if (t.find("tfoot tr").length) {
+          if ("border" == e || void 0 == e) return t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-td-all");
+          "noBorder" == e ? t.find("tfoot tr").addClass("hiprint-printElement-tableTarget-border-td-none") : t.find("tfoot tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表尾单元格边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>    \n        <option value="border" >有边框</option>\n        <option value="noBorder" >无边框</option>\n      \n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表尾单元格边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>    \n        <option value="border" >${i18n.__('有边框')}</option>\n        <option value="noBorder" >${i18n.__('无边框')}</option>\n      \n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2894,7 +2570,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头行高\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n       \n        <option value="" >默认</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头行高')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n       \n        <option value="" >${i18n.__('默认')}</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -2920,7 +2596,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头字体大小\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头字体大小')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -2946,7 +2622,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头字体粗细\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit"> \n        <option value="" >默认</option>\n        <option value="lighter" >更细</option>\n        <option value="bold" >粗体</option>\n        <option value="bolder" >粗体+</option>\n        <option value="100" >100</option>\n        <option value="200" >200</option>\n        <option value="300" >300</option>\n        <option value="400" >400</option>\n        <option value="500" >500</option>\n        <option value="600" >600</option>\n        <option value="700" >700</option>\n        <option value="800" >800</option>\n        <option value="900" >900</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头字体粗细')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit"> \n        <option value="" >${i18n.__('默认')}</option>\n        <option value="lighter" >${i18n.__('更细')}</option>\n        <option value="bold" >${i18n.__('粗体')}</option>\n        <option value="bolder" >${i18n.__('粗体+')}</option>\n        <option value="100" >100</option>\n        <option value="200" >200</option>\n        <option value="300" >300</option>\n        <option value="400" >400</option>\n        <option value="500" >500</option>\n        <option value="600" >600</option>\n        <option value="700" >700</option>\n        <option value="800" >800</option>\n        <option value="900" >900</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -2963,16 +2639,14 @@ var hiprint = function (t) {
       }
 
       return t.prototype.css = function (t, e) {
-        if (t.find("tbody tr td").length) {
-          if ("border" == e || void 0 == e) return t.find("tbody tr td").css("border", "1px solid"), "border:1px solid";
-          "noBorder" == e ? t.find("tbody tr td").css("border", "0px solid") : t.find("tbody tr td").map(function (t, e) {
-            e.style.border = "";
-          });
+        if (t.find("tbody tr").length) {
+          if ("border" == e || void 0 == e) return t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-td-all");
+          "noBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-td-none") : t.find("tbody tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n            表体单元格边框\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >默认</option>\n            <option value="border" >有边框</option>\n            <option value="noBorder" >无边框</option>\n            </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n            ${i18n.__('表体单元格边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >${i18n.__('默认')}</option>\n            <option value="border" >${i18n.__('有边框')}</option>\n            <option value="noBorder" >${i18n.__('无边框')}</option>\n            </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -2989,7 +2663,7 @@ var hiprint = function (t) {
 
       return t.prototype.css = function (t, e) {
         if (t.find("tbody tr td").length) {
-          if (e) return t.find("tbody tr td:not([rowspan])").css("height", e + "pt"), "height:" + e + "pt";
+          if (e) return t.find("tbody tr td").css("height", e + "pt"), "height:" + e + "pt";
           t.find("tbody tr td").map(function (t, e) {
             e.style.height = "";
           });
@@ -2997,7 +2671,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n            表体行高\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >默认</option>\n            <option value="6" >6pt</option>\n            <option value="6.75" >6.75pt</option>\n            <option value="7.5" >7.5pt</option>\n            <option value="8.25" >8.25pt</option>\n            <option value="9" >9pt</option>\n            <option value="9.75" >9.75pt</option>\n            <option value="10.5" >10.5pt</option>\n            <option value="11.25" >11.25pt</option>\n            <option value="12" >12pt</option>\n            <option value="12.75" >12.75pt</option>\n            <option value="13.5" >13.5pt</option>\n            <option value="14.25" >14.25pt</option>\n            <option value="15" >15pt</option>\n            <option value="15.75" >15.75pt</option>\n            <option value="16.5" >16.5pt</option>\n            <option value="17.25" >17.25pt</option>\n            <option value="18" >18pt</option>\n            <option value="18.75" >18.75pt</option>\n            <option value="19.5" >19.5pt</option>\n            <option value="20.25" >20.25pt</option>\n            <option value="21" >21pt</option>\n            <option value="21.75" >21.75pt</option>\n            <option value="22.5" >22.5pt</option>\n            <option value="23.25" >23.25pt</option>\n            <option value="24" >24pt</option>\n            <option value="24.75" >24.75pt</option>\n            <option value="25.5" >25.5pt</option>\n            <option value="26.25" >26.25pt</option>\n            <option value="27" >27pt</option>\n            <option value="27.75" >27.75pt</option>\n            <option value="28.5" >28.5pt</option>\n            <option value="29.25" >29.25pt</option>\n            <option value="30" >30pt</option>\n            <option value="30.75" >30.75pt</option>\n            <option value="31.5" >31.5pt</option>\n            <option value="32.25" >32.25pt</option>\n            <option value="33" >33pt</option>\n            <option value="33.75" >33.75pt</option>\n            <option value="34.5" >34.5pt</option>\n            <option value="35.25" >35.25pt</option>\n            <option value="36" >36pt</option>\n            </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n            ${i18n.__('表体行高')}\n        </div>\n        <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n            <option value="" >${i18n.__('默认')}</option>\n            <option value="6" >6pt</option>\n            <option value="6.75" >6.75pt</option>\n            <option value="7.5" >7.5pt</option>\n            <option value="8.25" >8.25pt</option>\n            <option value="9" >9pt</option>\n            <option value="9.75" >9.75pt</option>\n            <option value="10.5" >10.5pt</option>\n            <option value="11.25" >11.25pt</option>\n            <option value="12" >12pt</option>\n            <option value="12.75" >12.75pt</option>\n            <option value="13.5" >13.5pt</option>\n            <option value="14.25" >14.25pt</option>\n            <option value="15" >15pt</option>\n            <option value="15.75" >15.75pt</option>\n            <option value="16.5" >16.5pt</option>\n            <option value="17.25" >17.25pt</option>\n            <option value="18" >18pt</option>\n            <option value="18.75" >18.75pt</option>\n            <option value="19.5" >19.5pt</option>\n            <option value="20.25" >20.25pt</option>\n            <option value="21" >21pt</option>\n            <option value="21.75" >21.75pt</option>\n            <option value="22.5" >22.5pt</option>\n            <option value="23.25" >23.25pt</option>\n            <option value="24" >24pt</option>\n            <option value="24.75" >24.75pt</option>\n            <option value="25.5" >25.5pt</option>\n            <option value="26.25" >26.25pt</option>\n            <option value="27" >27pt</option>\n            <option value="27.75" >27.75pt</option>\n            <option value="28.5" >28.5pt</option>\n            <option value="29.25" >29.25pt</option>\n            <option value="30" >30pt</option>\n            <option value="30.75" >30.75pt</option>\n            <option value="31.5" >31.5pt</option>\n            <option value="32.25" >32.25pt</option>\n            <option value="33" >33pt</option>\n            <option value="33.75" >33.75pt</option>\n            <option value="34.5" >34.5pt</option>\n            <option value="35.25" >35.25pt</option>\n            <option value="36" >36pt</option>\n            </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -3023,7 +2697,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表头背景\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit" />\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表头背景')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit" />\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -3042,8 +2716,8 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function (t) {
-        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? '线宽' : '边框大小';
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ' + name + '\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? `${i18n.__('线宽')}` : `${i18n.__('边框大小')}`;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${name}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.css = function (t, e) {
         if (t && t.length) {
           if (e) return t.css("border-width", e + "pt"), "border-width:" + e + "pt";
@@ -3067,10 +2741,564 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        条形码格式\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="CODE128A" >CODE128A</option>\n        <option value="CODE128B" >CODE128B</option>\n        <option value="CODE128C" >CODE128C</option>\n        <option value="CODE39" >CODE39</option>\n        <option value="EAN13" >EAN-13</option>\n        <option value="EAN8" >EAN-8</option>\n        <option value="EAN5" >EAN-5</option>\n        <option value="EAN2" >EAN-2</option>\n        <option value="UPC" >UPC（A）</option>\n        <option value="ITF" >ITF</option>\n        <option value="ITF14" >ITF-14</option>\n        <option value="MSI" >MSI</option>\n            <option value="MSI10" >MSI10</option>\n            <option value="MSI11" >MSI11</option>\n            <option value="MSI1010" >MSI1010</option>\n            <option value="MSI1110" >MSI1110</option>\n            <option value="Pharmacode" >Pharmacode</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('条形码格式')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="CODE128A" >CODE128A</option>\n        <option value="CODE128B" >CODE128B</option>\n        <option value="CODE128C" >CODE128C</option>\n        <option value="CODE39" >CODE39</option>\n        <option value="EAN13" >EAN-13</option>\n        <option value="EAN8" >EAN-8</option>\n        <option value="EAN5" >EAN-5</option>\n        <option value="EAN2" >EAN-2</option>\n        <option value="UPC" >UPC（A）</option>\n        <option value="ITF" >ITF</option>\n        <option value="ITF14" >ITF-14</option>\n        <option value="MSI" >MSI</option>\n            <option value="MSI10" >MSI10</option>\n            <option value="MSI11" >MSI11</option>\n            <option value="MSI1010" >MSI1010</option>\n            <option value="MSI1110" >MSI1110</option>\n            <option value="Pharmacode" >Pharmacode</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         return t || void 0;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    barTextMode = function () {
+      function t() {
+        this.name = "barTextMode";
+      }
+      return t.prototype.createTarget = function() {
+        this.target = $(`<div class="hiprint-option-item"><div class="hiprint-option-item-label">${i18n.__('条码文本模式')}</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">${i18n.__('默认')}</option><option value="text">单独文本</option><option value="svg">svg文本</option></select></div></div>`)
+        return this.target;
+      }, t.prototype.getValue = function() {
+        var t = this.target.find("select").val();
+        return t || void 0;
+      }, t.prototype.setValue = function(t) {
+        this.target.find("select").val(t)
+      }, t.prototype.destroy = function() {
+        this.target.remove()
+      }, t;
+    }(),
+    barWidth = function () {
+      function t() {
+        this.name = "barWidth";
+      }
+      return t.prototype.createTarget = function() {
+        this.target = $(`<div class="hiprint-option-item"><div class="hiprint-option-item-label">${i18n.__('条码宽度')}</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">${i18n.__('默认')}</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div></div>`)
+        return this.target;
+      }, t.prototype.getValue = function() {
+        var t = this.target.find("select").val();
+        return t || void 0;
+      }, t.prototype.setValue = function(t) {
+        this.target.find("select").val(t)
+      }, t.prototype.destroy = function() {
+        this.target.remove()
+      }, t;
+    }(),
+    barAutoWidth = function() {
+      function t() {
+        this.name = "barAutoWidth";
+      }
+      return t.prototype.createTarget = function() {
+        this.target = $(`<div class="hiprint-option-item"><div class="hiprint-option-item-label">${i18n.__('条码自动增宽')}</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">${i18n.__('默认')}</option><option value="true">${i18n.__('自动')}</option><option value="false">${i18n.__('不自动')}</option></select></div></div>`)
+        return this.target;
+      }, t.prototype.getValue = function() {
+        var t = this.target.find("select").val();
+        return t || void 0;
+      }, t.prototype.setValue = function(t) {
+        this.target.find("select").val(t)
+      }, t.prototype.destroy = function() {
+        this.target.remove()
+      }, t;
+    }(),
+    barcodeType = function() {
+      function t() {
+        this.name = "barcodeType"
+      }
+
+      return t.prototype.createTarget = function () {
+        var options = [{
+          label: `${i18n.__('默认')}(Code 128)`,
+          value: "",
+        },
+        {
+          label: `${i18n.__('商品条码')}`,
+          children: [
+            {
+              label: "EAN-13",
+              value: "ean13",
+            },
+            {
+              label: "EAN-8",
+              value: "ean8",
+            },
+            {
+              label: "UPC-A",
+              value: "upca",
+            },
+            {
+              label: "UPC-E",
+              value: "upce",
+            },
+            {
+              label: "ISBN",
+              value: "isbn",
+            },
+            {
+              label: "ISMN",
+              value: "ismn",
+            },
+            {
+              label: "ISSN",
+              value: "issn",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('条形码')}`,
+          children: [
+            {
+              label: "Code 39",
+              value: "code39",
+            },
+            {
+              label: "Code 39 Extended",
+              value: "code39ext",
+            },
+            {
+              label: "Code 93",
+              value: "code93",
+            },
+            {
+              label: "Code 93 Extended",
+              value: "code93ext",
+            },
+            {
+              label: "Code 128",
+              value: "code128",
+            },
+            {
+              label: "Interleaved 2 of 5 (ITF)",
+              value: "interleaved2of5",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('物流')}`,
+          children: [
+            {
+              label: "EAN-14",
+              value: "ean14",
+            },
+            {
+              label: "GS1-128",
+              value: "gs1-128",
+            },
+            {
+              label: "ITF-14",
+              value: "itf14",
+            },
+            {
+              label: "SSCC-18",
+              value: "sscc18",
+            },
+          ],
+        },
+        {
+          label: "GS1 DataBar",
+          children: [
+            {
+              label: "扩展式 GS1 DataBar",
+              value: "databarexpanded",
+            },
+            {
+              label: "层排扩展式 GS1 DataBar",
+              value: "databarexpandedstacked",
+            },
+            {
+              label: "限定式 GS1 DataBar",
+              value: "databarlimited",
+            },
+            {
+              label: "全向式 GS1 DataBar",
+              value: "databaromni",
+            },
+            {
+              label: "层排式 GS1 DataBar",
+              value: "databarstacked",
+            },
+            {
+              label: "全向层排式 GS1 DataBar",
+              value: "databarstackedomni",
+            },
+            {
+              label: "截短式 GS1 DataBar",
+              value: "databartruncated",
+            },
+            {
+              label: "GS1 北美优惠券码",
+              value: "gs1northamericancoupon",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('邮政和快递编码')}`,
+          children: [
+            {
+              label: "AusPost 4 State Customer Code",
+              value: "auspost",
+            },
+            {
+              label: "Deutsche Post Identcode",
+              value: "identcode",
+            },
+            {
+              label: "Deutsche Post Leitcode",
+              value: "leitcode",
+            },
+            {
+              label: "Japan Post 4 State Customer Code",
+              value: "japanpost",
+            },
+            {
+              label: "Royal TNT Post",
+              value: "kix",
+            },
+            {
+              label: "Royal Mail 4 State Customer Code",
+              value: "royalmail",
+            },
+            {
+              label: "Royal Mail Mailmark",
+              value: "mailmark",
+            },
+            {
+              label: "MaxiCode",
+              value: "maxicode",
+            },
+            {
+              label: "USPS FIM symbols",
+              value: "symbol",
+            },
+            {
+              label: "USPS Intelligent Mail",
+              value: "onecode",
+            },
+            {
+              label: "USPS PLANET",
+              value: "planet",
+            },
+            {
+              label: "USPS POSTNET",
+              value: "postnet",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('医疗产品编码')}`,
+          children: [
+            {
+              label: "Italian Pharmacode",
+              value: "code32",
+            },
+            {
+              label: "Pharmaceutical Binary Code",
+              value: "pharmacode",
+            },
+            {
+              label: "Pharmazentralnummer (PZN)",
+              value: "pzn",
+            },
+            {
+              label: "Two-track Pharmacode",
+              value: "pharmacode2",
+            },
+            {
+              label: "HIBC Aztec Code",
+              value: "hibcazteccode",
+            },
+            {
+              label: "HIBC Codablock F",
+              value: "hibccodablockf",
+            },
+            {
+              label: "HIBC Code 128",
+              value: "hibccode128",
+            },
+            {
+              label: "HIBC Code 39",
+              value: "hibccode39",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('不常用编码')}`,
+          children: [
+            {
+              label: "Code 11",
+              value: "code11",
+            },
+            {
+              label: "Code 16K",
+              value: "code16k",
+            },
+            {
+              label: "Code 2 of 5",
+              value: "code2of5",
+            },
+            {
+              label: "Code 49",
+              value: "code49",
+            },
+            {
+              label: "Code One",
+              value: "codeone",
+            },
+            {
+              label: "Codabar",
+              value: "rationalizedCodabar",
+            },
+            {
+              label: "Codablock F",
+              value: "codablockf",
+            },
+            {
+              label: "BC412",
+              value: "bc412",
+            },
+            {
+              label: "COOP 2 of 5",
+              value: "coop2of5",
+            },
+            {
+              label: "Channel Code",
+              value: "channelcode",
+            },
+            {
+              label: "Datalogic 2 of 5",
+              value: "datalogic2of5",
+            },
+            {
+              label: "DotCode",
+              value: "dotcode",
+            },
+            {
+              label: "IATA 2 of 5",
+              value: "iata2of5",
+            },
+            {
+              label: "MSI Plessey",
+              value: "msi",
+            },
+            {
+              label: "Matrix 2 of 5",
+              value: "matrix2of5",
+            },
+            {
+              label: "Plessey UK",
+              value: "plessey",
+            },
+            {
+              label: "PosiCode",
+              value: "posicode",
+            },
+            {
+              label: "Telepen",
+              value: "telepen",
+            },
+            {
+              label: "Telepen Numeric",
+              value: "telepennumeric",
+            },
+          ],
+        },
+        {
+          label: "GS1 复合编码",
+          children: [
+            {
+              label: "复合 EAN-13",
+              value: "ean13composite",
+            },
+            {
+              label: "复合 EAN-8",
+              value: "ean8composite",
+            },
+            {
+              label: "复合 UPC-A",
+              value: "upcacomposite",
+            },
+            {
+              label: "复合 UPC-E",
+              value: "upcecomposite",
+            },
+            {
+              label: "层排扩展式复合 GS1 DataBar",
+              value: "databarexpandedstackedcomposite",
+            },
+            {
+              label: "扩展式复合 GS1 DataBar",
+              value: "databarexpandedcomposite",
+            },
+            {
+              label: "限定式复合 GS1 DataBar",
+              value: "databarlimitedcomposite",
+            },
+            {
+              label: "全向式复合 GS1 DataBar",
+              value: "databaromnicomposite",
+            },
+            {
+              label: "层排式复合 GS1 DataBar",
+              value: "databarstackedcomposite",
+            },
+            {
+              label: "全向层排式复合 GS1 DataBar",
+              value: "databarstackedomnicomposite",
+            },
+            {
+              label: "截短式复合 GS1 DataBar",
+              value: "databartruncatedcomposite",
+            },
+            {
+              label: "复合 GS1-128",
+              value: "gs1-128composite",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('附加组件')}`,
+          children: [
+            {
+              label: "EAN-2 (2 位附加码)",
+              value: "ean2",
+            },
+            {
+              label: "EAN-5 (5 位附加码)",
+              value: "ean5",
+            },
+            {
+              label: "GS1 复合 2D 组件",
+              value: "gs1-cc",
+            },
+          ],
+        },
+        {
+          label: `${i18n.__('实验编码')}`,
+          children: [
+            {
+              label: "Raw",
+              value: "raw",
+            },
+            {
+              label: "Custom 4 state symbology",
+              value: "daft",
+            },
+            {
+              label: "Flattermarken",
+              value: "flattermarken",
+            },
+          ],
+        }]
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row"><div class="hiprint-option-item-label">${i18n.__('条码类型')}</div><div class="hiprint-option-item-field"><select class="auto-submit"></select></div></div>`)
+        var select = this.target.find('select.auto-submit')
+        options.forEach(item => {
+          if (item.children) {
+            var optgroup = $(`<optgroup label="${item.label}"></optgroup`)
+            item.children.forEach(chil => {
+              optgroup.append($(`<option value="${chil.value}">${chil.label}</option>`))
+            })
+            select.append(optgroup)
+          } else {
+            select.append(`<option value="${item.value}">${item.label}</option>`)
+          }
+        })
+        return this.target
+      }, t.prototype.getValue = function () {
+        return this.target.find("select").val() || void 0;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    qrcodeType = function() {
+      function t() {
+        this.name = "qrcodeType"
+      }
+
+      return t.prototype.createTarget = function () {
+        var options = [{
+          label: `${i18n.__('默认')}(qrcode)`,
+          value: "",
+        },
+        {
+          label: "QR Code",
+          value: "qrcode",
+        },
+        {
+          label: "Micro QR Code",
+          value: "microqrcode",
+        },
+        {
+          label: "Swiss QR Code",
+          value: "swissqrcode",
+        },
+        {
+          label: "Rectangular Micro QR Code",
+          value: "rectangularmicroqrcode",
+        },
+        {
+          label: "Aztec Code",
+          value: "azteccode",
+        },
+        {
+          label: "Aztec Runes",
+          value: "aztecrune",
+        },
+        {
+          label: "Compact Aztec Code",
+          value: "azteccodecompact",
+        },
+        {
+          label: "Data Matrix",
+          value: "datamatrix",
+        },
+        {
+          label: "Data Matrix Rectangular",
+          value: "datamatrixrectangular",
+        },
+        {
+          label: "汉信码",
+          value: "hanxin",
+        },
+        {
+          label: "GS1 Data Matrix",
+          value: "gs1datamatrix",
+        },
+        {
+          label: "GS1 Data Matrix Rectangular",
+          value: "gs1datamatrixrectangular",
+        },
+        {
+          label: "GS1 QR Code",
+          value: "gs1qrcode",
+        },
+        {
+          label: "HIBC Data Matrix",
+          value: "hibcdatamatrix",
+        },
+        {
+          label: "HIBC Data Matrix Rectangular",
+          value: "hibcdatamatrixrectangular",
+        },
+        {
+          label: "HIBC MicroPDF417",
+          value: "hibcmicropdf417",
+        },
+        {
+          label: "HIBC PDF417",
+          value: "hibcpdf417",
+        },
+        {
+          label: "HIBC QR Code",
+          value: "hibcqrcode",
+        }]
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row"><div class="hiprint-option-item-label">${i18n.__('二维码类型')}</div><div class="hiprint-option-item-field"><select class="auto-submit"></select></div></div>`)
+        var select = this.target.find('select.auto-submit')
+        options.forEach(item => {
+          select.append(`<option value="${item.value}">${item.label}</option>`)
+        })
+        return this.target
+      }, t.prototype.getValue = function () {
+        return this.target.find("select").val() || void 0;
       }, t.prototype.setValue = function (t) {
         this.target.find("select").val(t);
       }, t.prototype.destroy = function () {
@@ -3083,7 +3311,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        二维码容错率\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="1" >7% L</option>\n        <option value="0" >15% M</option>\n        <option value="3" >25% Q</option>\n        <option value="2" >30% H</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('二维码容错率')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="1" >7% L</option>\n        <option value="0" >15% M</option>\n        <option value="3" >25% Q</option>\n        <option value="2" >30% H</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         return parseInt(t || 0);
@@ -3106,7 +3334,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字体颜色\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字体颜色')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -3125,7 +3353,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        文本修饰\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="underline" >下划线。</option>\n            <option value="overline" >上划线</option>\n            <option value="line-through" >穿梭线</option>\n           \n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('文本修饰')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="underline" >${i18n.__('下划线')}</option>\n            <option value="overline" >${i18n.__('上划线')}</option>\n            <option value="line-through" >${i18n.__('穿梭线')}</option>\n           \n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.css = function (t, e) {
         if (t && t.length) {
           if (e) return t.css("text-decoration", e), "text-decoration:" + e;
@@ -3153,13 +3381,13 @@ var hiprint = function (t) {
 
         if (t && (e = t.getFields()), e) {
           this.isSelect = !0;
-          var n = ' <div class="hiprint-option-item hiprint-option-item-row">\n            <div class="hiprint-option-item-label">\n            字段名\n            </div>\n            <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n                <option value="" >请选择字段</option>';
+          var n = `<div class="hiprint-option-item hiprint-option-item-row">\n            <div class="hiprint-option-item-label">\n            ${i18n.__('字段名')}\n            </div>\n            <div class="hiprint-option-item-field">\n            <select class="auto-submit">\n                <option value="" >${i18n.__('请选择字段')}</option>`;
           e.forEach(function (t, e) {
             n += ' <option value="' + (t.field || "") + '" >' + (t.text || "") + "</option>";
           }), n += " </select>\n            </div>\n        </div>", this.target = $(n);
         } else {
           this.isSelect = !1;
-          this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n            <div class="hiprint-option-item-label">\n            字段名\n            </div>\n            <div class="hiprint-option-item-field">\n            <input type="text" placeholder="请输入字段名" class="auto-submit">\n            </div>\n        </div>');
+          this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n            <div class="hiprint-option-item-label">\n            ${i18n.__('字段名')}\n            </div>\n            <div class="hiprint-option-item-field">\n            <input type="text" placeholder="${i18n.__('请输入字段名')}" class="auto-submit">\n            </div>\n        </div>`);
         }
 
         return this.target;
@@ -3177,7 +3405,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        标题\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:50px;" placeholder="请输入标题" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('标题')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:50px;" placeholder="${i18n.__('请输入标题')}" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -3193,7 +3421,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        测试数据\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="仅字段名称存在时有效" class="auto-submit" >\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('测试数据')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('仅字段名称存在时有效')}" class="auto-submit" >\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -3210,24 +3438,24 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function (t, o) {
         var n = this;
-        n.target = $('<div class="hiprint-option-item hiprint-option-item-row">' +
-          '<div class="hiprint-option-item-label">\n        位置坐标\n        </div>' +
-          '<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n        ' +
-          '<input type="number" style="width:48%" placeholder="X位置(左)" class="auto-submit" />\n        ' +
-          '<input type="number" style="width:48%" placeholder="Y位置(上)" class="auto-submit" />\n        ' +
-          '</div>\n' +
-          '</div>');
+        n.target = $(`<div class="hiprint-option-item hiprint-option-item-row">
+          <div class="hiprint-option-item-label">\n        ${i18n.__('位置坐标')}\n        </div>
+          <div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n
+          <input type="number" style="width:48%" placeholder="${i18n.__('X位置(左)')}" class="auto-submit" />\n
+          <input type="number" style="width:48%" placeholder="${i18n.__('Y位置(上)')}" class="auto-submit" />\n
+          </div>\n
+          </div>`);
         n.syncLock = o.coordinateSync || false;
         n.createSyncLock(n.syncLock);
         return n.target;
       }, t.prototype.createSyncLock = function (t) {
         var n = this;
-        n.lockTarget = n.syncLock ? $('<label style="margin: 0 4px;text-align:center;width: 8%" title="同步">🔗</label>') : $('<label style="margin: 0 4px;text-align:center;width: 8%" title="不同步">🔓</label>');
+        n.lockTarget = n.syncLock ? $(`<label style="margin: 0 4px;text-align:center;width: 8%" title="${i18n.__('同步')}">🔗</label>`) : $(`<label style="margin: 0 4px;text-align:center;width: 8%" title="${i18n.__('不同步')}">🔓</label>`);
         n.lockTarget.click(function () {
           if (n.syncLock) {
-            n.lockTarget.text("🔓").attr("title", "不同步");
+            n.lockTarget.text("🔓").attr("title", `${i18n.__('不同步')}`);
           } else {
-            n.lockTarget.text("🔗").attr("title", "同步");
+            n.lockTarget.text("🔗").attr("title", `${i18n.__('同步')}`);
           }
           n.syncLock = !n.syncLock;
         })
@@ -3277,24 +3505,24 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function (t, o) {
         var n = this;
-        n.target = $('<div class="hiprint-option-item hiprint-option-item-row">' +
-          '<div class="hiprint-option-item-label">\n        宽高大小\n        </div>' +
-          '<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n        ' +
-          '<input type="number" style="width:48%" placeholder="宽" class="auto-submit" />\n        ' +
-          '<input type="number" style="width:48%" placeholder="高" class="auto-submit" />\n        ' +
-          '</div>\n' +
-          '</div>');
+        n.target = $(`<div class="hiprint-option-item hiprint-option-item-row">
+          <div class="hiprint-option-item-label">\n        ${i18n.__('宽高大小')}\n        </div>
+          <div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n
+          <input type="number" style="width:48%" placeholder="${i18n.__('宽')}" class="auto-submit" />\n
+          <input type="number" style="width:48%" placeholder="${i18n.__('高')}" class="auto-submit" />\n
+          </div>\n
+          </div>`);
         n.syncLock = o.widthHeightSync || false;
         n.createSyncLock(n.syncLock);
         return n.target;
       }, t.prototype.createSyncLock = function (t) {
         var n = this;
-        n.lockTarget = n.syncLock ? $('<label style="margin: 0 4px;text-align:center;width: 8%" title="同步">🔗</label>') : $('<label style="margin: 0 4px;text-align:center;width: 8%" title="不同步">🔓</label>');
+        n.lockTarget = n.syncLock ? $(`<label style="margin: 0 4px;text-align:center;width: 8%" title="${i18n.__('同步')}">🔗</label>`) : $(`<label style="margin: 0 4px;text-align:center;width: 8%" title="${i18n.__('不同步')}">🔓</label>`);
         n.lockTarget.click(function () {
           if (n.syncLock) {
-            n.lockTarget.text("🔓").attr("title", "不同步");
+            n.lockTarget.text("🔓").attr("title", `${i18n.__('不同步')}`);
           } else {
-            n.lockTarget.text("🔗").attr("title", "同步");
+            n.lockTarget.text("🔗").attr("title", `${i18n.__('同步')}`);
           }
           n.syncLock = !n.syncLock;
         })
@@ -3345,7 +3573,7 @@ var hiprint = function (t) {
       return t.prototype.createTarget = function (t) {
         this.el = t;
         var e = void 0, i = this;
-        this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        图片地址\n        </div>\n        <div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n        <input type="text" placeholder="请输入图片地址" class="auto-submit" style="width:70%">\n    <button class="hiprint-option-item-settingBtn" style="padding:0 10px;margin:0 0 0 5px" type="button">选择</button>        </div>\n    </div>');
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('图片地址')}\n        </div>\n        <div class="hiprint-option-item-field" style="display: flex;align-items: baseline;">\n        <input type="text" placeholder="${i18n.__('请输入图片地址')}" class="auto-submit" style="width:70%">\n    <button class="hiprint-option-item-settingBtn" style="padding:0 10px;margin:0 0 0 5px" type="button">${i18n.__('选择')}</button>        </div>\n    </div>`);
         if (t && (e = t.getOnImageChooseClick()), e) {
           this.target.find('button').click(function () {
             e && e(i);
@@ -3374,7 +3602,7 @@ var hiprint = function (t) {
       }, t.prototype.updateEl = function (width, height, opt, cb) {
         if (opt) {
           var ratio, w, h;
-          if (opt || opt.auto) {
+          if (opt && opt.auto) {
             if (width >= height) {
               opt.width = true;
             } else {
@@ -3402,9 +3630,8 @@ var hiprint = function (t) {
             this.el.designTarget.css('height', h + "pt");
           }
           this.el.designTarget.children('.resize-panel').trigger($.Event('click'));
-        } else {
-          cb && cb(this.el, width, height);
         }
+        cb && cb(this.el, width, height);
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t;
@@ -3421,7 +3648,7 @@ var hiprint = function (t) {
         }
         return null;
       }, t.prototype.createTarget = function () {
-        this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        图片缩放\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="contain" >等比</option>\n        <option value="cover" >剪裁</option>\n        <option value="fill" >填充</option>\n        <option value="none" >原始尺寸</option>\n                </select>\n        </div>\n    </div>'), this.target;
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('图片缩放')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="contain" >${i18n.__('等比')}</option>\n        <option value="cover" >${i18n.__('剪裁')}</option>\n        <option value="fill" >${i18n.__('填充')}</option>\n        <option value="none" >${i18n.__('原始尺寸')}</option>\n                </select>\n        </div>\n    </div>`), this.target;
         return this.target;
       }, t.prototype.getValue = function () {
         return this.target.find("select").val();
@@ -3444,8 +3671,8 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function (t) {
-        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? '颜色' : '边框颜色';
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ' + name + '\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit" />\n        </div>\n    </div>'), this.target;
+        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? `${i18n.__('颜色')}` : `${i18n.__('边框颜色')}`;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${name}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit" />\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -3458,13 +3685,83 @@ var hiprint = function (t) {
         this.target.remove();
       }, t;
     }(),
+    watermarkOptions = function () {
+      function t() {
+        this.name = "watermarkOptions";
+      }
+      return t.prototype.createTarget = function () {
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row"><div class="hiprint-option-item-label">${i18n.__('水印功能')}</div></div>`);
+        this.content = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;"><div style="width:25%">${i18n.__('水印内容')}:</div><input style="width:75%" type="text" placeholder="${i18n.__('水印内容')}" class="auto-submit"></div>`);
+        this.fillStyle = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;margin-top: 4px"><div style="width:25%">${i18n.__('字体颜色')}:</div><input style="width:110%" data-format="rgb" data-opacity="0.3" type="text" placeholder="${i18n.__('字体颜色')}" class="auto-submit"></div>`);
+        this.fontSize = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;"><div style="width:25%">${i18n.__('字体大小')}:</div><input style="width:75%" type="range" min="10" max="80" placeholder="${i18n.__('字体大小')}" class="auto-submit"></div>`);
+        this.rotate = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;"><div style="width:25%">${i18n.__('旋转角度')}:</div><input style="width:75%" type="range" min="0" max="180" placeholder="${i18n.__('旋转角度')}" class="auto-submit"></div>`);
+        this.width = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;"><div style="width:25%">${i18n.__('水平密度')}:</div><input style="width:75%" type="range" min="100" max="800" placeholder="${i18n.__('水平密度')}" class="auto-submit"></div>`);
+        this.height = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;"><div style="width:25%">${i18n.__('垂直密度')}:</div><input style="width:75%" type="range" min="100" max="800" placeholder="${i18n.__('垂直密度')}" class="auto-submit"></div>`);
+        this.timestamp = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: center;"><div style="width:25%">${i18n.__('水印时间')}:</div><input style="width:18px;height:18px;margin:0 0 4px 0;" type="checkbox" placeholder="${i18n.__('水印时间')}" class="auto-submit"></div>`);
+        let formatlist = [
+          "YYYY-MM-DD HH:mm:ss",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD HH",
+          "YYYY-MM-DD",
+          "YYYY-MMMM",
+          "YYYY-MM",
+          "YYYY",
+        ];
+        let timeFormatList = `\n            <option value="" >${i18n.__('默认')}(YYYY-MM-DD HH:mm)</option>`;
+        formatlist.forEach(function (e) {
+          timeFormatList += '\n            <option value="' + e + '">' + e + '</option>';
+        })
+        this.format = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;"><div style="width:25%">${i18n.__('时间格式')}:</div><select style="width:75%" class="auto-submit"></select></div>`);
+        this.format.find(".auto-submit").append($(timeFormatList));
+        this.target.append(this.content);
+        this.target.append(this.fillStyle);
+        this.target.append(this.fontSize);
+        this.target.append(this.rotate);
+        this.target.append(this.width);
+        this.target.append(this.height);
+        this.target.append(this.timestamp);
+        this.target.append(this.format);
+        return this.target;
+      }, t.prototype.getValue = function () {
+        let opt = {
+          content: this.content.find('input').val(),
+          fillStyle: this.fillStyle.find('input').val() || "rgba(184, 184, 184, 0.3)",
+          fontSize: parseInt(this.fontSize.find('input').val() || "14") + "px",
+          rotate: parseInt(this.rotate.find('input').val() || "25"),
+          width: parseInt(this.width.find('input').val() || "200"),
+          height: parseInt(this.height.find('input').val() || "200"),
+          timestamp: this.timestamp.find('input').is(':checked'),
+          format: this.format.find('select').val() == "" ? "YYYY-MM-DD HH:mm" : this.format.find('select').val()
+        }
+        let options = Object.assign({}, this.options, opt);
+        return options;
+      }, t.prototype.setValue = function (t) {
+        this.options = t;
+        this.content.find("input").val(t.content || "");
+        this.fillStyle.find("input").val(t.fillStyle || "rgba(184, 184, 184, 0.3)");
+        this.fillStyle.find("input").minicolors({
+          format: "rgb",
+          opacity: true,
+          theme: "bootstrap"
+        });
+        const fontSize = parseInt(t.fontSize || "14");
+        this.fontSize.find("input").val(fontSize);
+        this.rotate.find("input").val(t.rotate || 25);
+        this.width.find("input").val(t.width || 200);
+        this.height.find("input").val(t.height || 200);
+        this.timestamp.find("input").attr("checked", t.timestamp == void 0 ? false : t.timestamp);
+        this.format.find("select").val(t.format || "YYYY-MM-DD HH:mm");
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
     H = function () {
       function t() {
         this.name = "paperNumberFormat";
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        页码格式\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="paperNo-paperCount" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('页码格式')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="\${paperNo}-\${paperCount}" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -3480,11 +3777,26 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        显示页码\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >显示</option>\n        <option value="true" >隐藏</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('显示页码')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('显示')}</option>\n        <option value="true" >${i18n.__('隐藏')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("true" == this.target.find("select").val()) return !0;
       }, t.prototype.setValue = function (t) {
         this.target.find("select").val((null == t ? "" : t).toString());
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    paperNumberContinue = function () {
+      function t() {
+        this.name = "paperNumberContinue";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('页码续排')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="true" >${i18n.__('续排')}</option>\n        <option value="reset" >${i18n.__('重排')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        return "true" == this.target.find("select").val();
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val((t == void 0 || t ? "true" : "reset").toString());
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t;
@@ -3497,7 +3809,7 @@ var hiprint = function (t) {
       return t.prototype.css = function (t, e) {
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        每行缩进\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('每行缩进')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        <option value="22.5" >22.5pt</option>\n        <option value="23.25" >23.25pt</option>\n        <option value="24" >24pt</option>\n        <option value="24.75" >24.75pt</option>\n        <option value="25.5" >25.5pt</option>\n        <option value="26.25" >26.25pt</option>\n        <option value="27" >27pt</option>\n        <option value="27.75" >27.75pt</option>\n        <option value="28.5" >28.5pt</option>\n        <option value="29.25" >29.25pt</option>\n        <option value="30" >30pt</option>\n        <option value="30.75" >30.75pt</option>\n        <option value="31.5" >31.5pt</option>\n        <option value="32.25" >32.25pt</option>\n        <option value="33" >33pt</option>\n        <option value="33.75" >33.75pt</option>\n        <option value="34.5" >34.5pt</option>\n        <option value="35.25" >35.25pt</option>\n        <option value="36" >36pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -3520,7 +3832,7 @@ var hiprint = function (t) {
         }
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        显示规则\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="none" >始终隐藏</option>\n            <option value="first" >首页</option>\n            <option value="odd" >奇数页</option>\n            <option value="even" >偶数页</option>\n            <option value="last" >尾页</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('显示规则')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="none" >${i18n.__('始终隐藏')}</option>\n            <option value="first" >${i18n.__('首页')}</option>\n            <option value="odd" >${i18n.__('奇数页')}</option>\n            <option value="even" >${i18n.__('偶数页')}</option>\n            <option value="last" >${i18n.__('尾页')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -3542,7 +3854,7 @@ var hiprint = function (t) {
         }
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        强制分页\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="true" >是</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('强制分页')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="true" >${i18n.__('是')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("true" == this.target.find("select").val()) return !0;
       }, t.prototype.setValue = function (t) {
@@ -3557,7 +3869,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        打印规则\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="odd" >保持奇数</option>\n            <option value="even" >保持偶数</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('打印规则')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="odd" >${i18n.__('保持奇数')}</option>\n            <option value="even" >${i18n.__('保持偶数')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -3573,7 +3885,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        分页规则\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="none" >不分页</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('分页规则')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="none" >${i18n.__('不分页')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -3589,7 +3901,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        移除段落左侧空白\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="true" >移除</option>\n            <option value="false" >不移除</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('移除段落左侧空白')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="true" >${i18n.__('移除')}</option>\n            <option value="false" >${i18n.__('不移除')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("false" == this.target.find("select").val()) return !1;
       }, t.prototype.setValue = function (t) {
@@ -3604,7 +3916,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        首页页尾\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="首页页尾" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('首页页尾')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('首页页尾')}" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3620,7 +3932,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        尾页页尾\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="尾页页尾" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('尾页页尾')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('尾页页尾')}" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3636,7 +3948,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        偶数页页尾\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="偶数页页尾" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('偶数页页尾')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('偶数页页尾')}" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3652,7 +3964,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        奇数页页尾\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="奇数页页尾" class="auto-submit" >\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('奇数页页尾')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('奇数页页尾')}" class="auto-submit" >\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3668,7 +3980,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        位置固定\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="false" >否</option>\n            <option value="true" >是</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('位置固定')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="false" >${i18n.__('否')}</option>\n            <option value="true" >${i18n.__('是')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("true" == this.target.find("select").val()) return !0;
       }, t.prototype.setValue = function (t) {
@@ -3683,7 +3995,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        拖动方向\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="h" >横向</option>\n        <option value="v" >竖向</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('拖动方向')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="h" >${i18n.__('横向')}</option>\n        <option value="v" >${i18n.__('竖向')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         return t || void 0;
@@ -3699,7 +4011,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        左偏移\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="偏移量pt" class="auto-submit" >\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('左偏移')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('偏移量')}pt" class="auto-submit" >\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3715,7 +4027,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        最低高度\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="文本过短或为空时的高度" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('最低高度')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('文本过短或为空时的高度')}" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3731,7 +4043,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        隐藏规则\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n            <option value="first" >首页</option>\n            <option value="last" >尾页</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('隐藏规则')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="first" >${i18n.__('首页')}</option>\n            <option value="last" >${i18n.__('尾页')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -3748,15 +4060,13 @@ var hiprint = function (t) {
 
       return t.prototype.css = function (t, e) {
         if (t.find("tbody tr").length) {
-          if ("border" == e || void 0 == e) return t.find("tbody tr").css("border", "1px solid"), "border:1pt solid";
-          "noBorder" == e ? t.find("tbody tr").css("border", "0px solid") : "topBorder" == e ? (t.find("tbody tr").css("border", "0px solid"), t.find("tbody tr").css("border-top", "1px solid")) : "bottomBorder" == e ? (t.find("tbody tr").css("border", "0px solid"), t.find("tbody tr").css("border-bottom", "1px solid")) : "topBottomBorder" == e ? (t.find("tbody tr").css("border", "0px solid"), t.find("tbody tr").css("border-top", "1px solid"), t.find("tbody tr").css("border-bottom", "1px solid")) : t.find("tbody tr").map(function (t, e) {
-            e.style.border = "";
-          });
+          if ("border" == e || void 0 == e) return t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-all");
+          "noBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-none") : "leftBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-left") : "rightBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-right") : "leftRightBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-lr") : "topBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-top") : "bottomBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-bottom") : "topBottomBorder" == e ? t.find("tbody tr").addClass("hiprint-printElement-tableTarget-border-tb") : t.find("tbody tr").removeClass();
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表体行边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>    \n        <option value="border" >有边框</option>\n        <option value="noBorder" >无边框</option>\n        <option value="topBorder" >上边框</option>\n        <option value="bottomBorder" >下边框</option>\n        <option value="topBottomBorder" >上下边框</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表体行边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>    \n        <option value="border" >${i18n.__('有边框')}</option>\n        <option value="noBorder" >${i18n.__('无边框')}</option>\n        <option value="leftBorder" >${i18n.__('左边框')}</option>\n        <option value="rightBorder" >${i18n.__('右边框')}</option>\n        <option value="leftRightBorder" >${i18n.__('左右边框')}</option>\n        <option value="topBorder" >${i18n.__('上边框')}</option>\n        <option value="bottomBorder" >${i18n.__('下边框')}</option>\n        <option value="topBottomBorder" >${i18n.__('上下边框')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -3773,22 +4083,17 @@ var hiprint = function (t) {
 
       return t.prototype.css = function (t, e) {
         if (t && t.length) {
-          var n = t.find(".hiprint-printElement-content").parent('.hiprint-printElement');
-          if (!n.length && t.hasClass('hiprint-printElement-hline')) {
-            n = t
-          }
-          ;
-          if (!n.length && t.hasClass('hiprint-printElement-image')) {
+          var n = t.find(".hiprint-printElement-content").parent(".hiprint-printElement");
+          if (!n.length) {
             n = t;
           }
-          ;
           if (e) return n.css("transform", "rotate(" + e + "deg)"), n.css("-ms-transform", "rotate(" + e + "deg)"), n.css("-moz-transform", "rotate(" + e + "deg)"), n.css("-webkit-transform", "rotate(" + e + "deg)"), n.css("-o-transform", "rotate(" + e + "deg)"), "transform:rotate(" + e + "deg)";
           n.length && (n[0].style.transform = "");
         }
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $('<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        旋转角度\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('旋转角度')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="number" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
@@ -3809,10 +4114,31 @@ var hiprint = function (t) {
         }
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $('<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        元素层级\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="number" class="auto-submit"/>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('元素层级')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="number" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseInt(t.toString());
+      }, t.prototype.setValue = function (t) {
+        this.target.find("input").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    borderRadius = function () {
+      function t() {
+        this.name = "borderRadius";
+      }
+
+      return t.prototype.css = function (t, e) {
+        if (t && t.length) {
+          if (e) return t.css('border-raduis', e);
+        }
+        return null;
+      }, t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('边框圆角')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("input").val();
+        if (t) return t;
       }, t.prototype.setValue = function (t) {
         this.target.find("input").val(t);
       }, t.prototype.destroy = function () {
@@ -3825,7 +4151,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        边框设置\n        </div>\n       \n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('边框设置')}\n        </div>\n       \n    </div>`), this.target;
       }, t.prototype.getValue = function () {
       }, t.prototype.setValue = function (t) {
       }, t.prototype.destroy = function () {
@@ -3845,7 +4171,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        上边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n            <option value="" >否</option>\n            <option value="solid" >实线</option>\n            <option value="dotted" >虚线</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('上边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n            <option value="" >${i18n.__('否')}</option>\n            <option value="solid" >${i18n.__('实线')}</option>\n            <option value="dotted" >${i18n.__('虚线')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -3868,7 +4194,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        左边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >否</option>\n        <option value="solid" >实线</option>\n        <option value="dotted" >虚线</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('左边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('否')}</option>\n        <option value="solid" >${i18n.__('实线')}</option>\n        <option value="dotted" >${i18n.__('虚线')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -3891,7 +4217,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        右边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >否</option>\n        <option value="solid" >实线</option>\n        <option value="dotted" >虚线</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('右边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('否')}</option>\n        <option value="solid" >${i18n.__('实线')}</option>\n        <option value="dotted" >${i18n.__('虚线')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -3914,7 +4240,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        下边框\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >否</option>\n        <option value="solid" >实线</option>\n        <option value="dotted" >虚线</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('下边框')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('否')}</option>\n        <option value="solid" >${i18n.__('实线')}</option>\n        <option value="dotted" >${i18n.__('虚线')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -3939,7 +4265,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        左内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('左内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -3965,7 +4291,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        上内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('上内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -3991,7 +4317,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        右内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('右内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4017,7 +4343,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        下内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('下内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4041,8 +4367,8 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function (t) {
-        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? '样式' : '边框样式';
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n       ' + name + '\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n            <option value="" >默认</option>\n            <option value="solid" >实线</option>\n            <option value="dashed" >长虚线</option>\n            <option value="dotted" >短虚线</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        var name = ['hline', 'vline', 'rect', 'oval'].includes(t.printElementType.type) ? `${i18n.__('样式')}` : `${i18n.__('边框样式')}`;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n       ${name}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n            <option value="" >${i18n.__('默认')}</option>\n            <option value="solid" >${i18n.__('实线')}</option>\n            <option value="dashed" >${i18n.__('长虚线')}</option>\n            <option value="dotted" >${i18n.__('短虚线')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -4065,7 +4391,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        背景颜色\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('背景颜色')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -4078,13 +4404,39 @@ var hiprint = function (t) {
         this.target.remove();
       }, t;
     }(),
-    it = function () {
+      barColor = function () {
+        function t() {
+          this.name = "barColor";
+        }
+
+        return t.prototype.css = function (t, e) {
+          if (t && t.length) {
+            // if (e) return t.css("background-color", e), "background-color:" + e;
+            // t[0].style.backgroundColor = "";
+          }
+          return null;
+        }, t.prototype.createTarget = function () {
+          return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('条码颜色')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
+        }, t.prototype.getValue = function () {
+          var t = this.target.find("input").val();
+          if (t) return t.toString();
+        }, t.prototype.setValue = function (t) {
+          this.target.find("input").minicolors({
+            defaultValue: t || "",
+            theme: "bootstrap"
+          }), this.target.find("input").val(t);
+        }, t.prototype.destroy = function () {
+          this.target.remove();
+        }, t;
+      }(),
+
+      it = function () {
       function t() {
         this.name = "orient";
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        纸张方向(仅自定义纸质有效)\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="1" >纵向</option>\n        <option value="2" >横向</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('纸张方向(仅自定义纸质有效)')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="1" >${i18n.__('纵向')}</option>\n        <option value="2" >${i18n.__('横向')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4100,11 +4452,37 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        上下对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="middle" >垂直居中</option>\n        <option value="bottom" >底部</option>\n       \n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('上下对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="middle" >${i18n.__('垂直居中')}</option>\n        <option value="bottom" >${i18n.__('底部')}</option>\n       \n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.css = function (t, e) {
         if (t && t.length) {
-          if (e) return "middle" === e && t.addClass("hiprint-text-content-middle"), "bottom" === e && t.addClass("hiprint-text-content-bottom"), "";
           t.removeClass("hiprint-text-content-middle"), t.removeClass("hiprint-text-content-bottom");
+          if (e) return "middle" === e && t.addClass("hiprint-text-content-middle"), "bottom" === e && t.addClass("hiprint-text-content-bottom"), "";
+        }
+
+        return null;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("select").val();
+        if (t) return t.toString();
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    textWrap = function () {
+      function t() {
+        this.name = "textContentWrap";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('文本换行')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="nowrap" >${i18n.__('不换行')}</option>\n        <option value="clip" >${i18n.__('不换行&隐藏')}</option>\n        <option value="ellipsis" >${i18n.__('不换行&省略')}</option>\n       </select>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.css = function (t, e) {
+        if (t && t.length) {
+          t.removeClass("hiprint-text-content-wrap");
+          t.find(".hiprint-printElement-text-content").removeClass("hiprint-text-content-wrap-nowrap");
+          t.find(".hiprint-printElement-text-content").removeClass("hiprint-text-content-wrap-clip");
+          t.find(".hiprint-printElement-text-content").removeClass("hiprint-text-content-wrap-ellipsis");
+          if (e) return t.addClass("hiprint-text-content-wrap"),t.find(".hiprint-printElement-text-content").addClass("hiprint-text-content-wrap-" + e), "";
         }
 
         return null;
@@ -4193,7 +4571,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        打印类型\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="" >文本</option>\n        <option value="barcode" >条形码</option>\n        <option value="qrcode" >二维码</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('打印类型')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="" >${i18n.__('文本')}</option>\n        <option value="barcode" >${i18n.__('条形码')}</option>\n        <option value="qrcode" >${i18n.__('二维码')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t;
@@ -4210,7 +4588,7 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function () {
         return this.target = $(
-          ' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        字段类型\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="text" >文本</option>\n <option value="sequence" >序号</option>\n       <option value="barcode" >条形码</option>\n        <option value="qrcode" >二维码</option>\n    <option value="image" >图片</option>\n        </select>\n        </div>\n    </div>'
+          `<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('字段类型')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认(文本)')}</option>\n        <option value="text" >${i18n.__('文本')}</option>\n <option value="sequence" >${i18n.__('序号')}</option>\n       <option value="barcode" >${i18n.__('条形码')}</option>\n        <option value="qrcode" >${i18n.__('二维码')}</option>\n    <option value="image" >${i18n.__('图片')}</option>\n        </select>\n        </div>\n    </div>`
         ), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
@@ -4228,7 +4606,7 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function () {
         return this.target = $(
-          ' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        条形码格式\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n         <option value="CODE128A" >CODE128A</option>\n        <option value="CODE128B" >CODE128B</option>\n        <option value="CODE128C" >CODE128C</option>\n        <option value="CODE39" >CODE39</option>\n        <option value="EAN-13" >EAN-13</option>\n        <option value="EAN-8" >EAN-8</option>\n        <option value="EAN-5" >EAN-5</option>\n        <option value="EAN-2" >EAN-2</option>\n        <option value="UPC（A）" >UPC（A）</option>\n        <option value="ITF" >ITF</option>\n        <option value="ITF-14" >ITF-14</option>\n        <option value="MSI" >MSI</option>\n            <option value="MSI10" >MSI10</option>\n            <option value="MSI11" >MSI11</option>\n            <option value="MSI1010" >MSI1010</option>\n            <option value="MSI1110" >MSI1110</option>\n            <option value="Pharmacode" >Pharmacode</option>\n        </select>\n        </div>\n    </div>'
+          `<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('条形码格式')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n         <option value="" >${i18n.__('默认')}(CODE128A)</option>\n         <option value="CODE128A" >CODE128A</option>\n        <option value="CODE128B" >CODE128B</option>\n        <option value="CODE128C" >CODE128C</option>\n        <option value="CODE39" >CODE39</option>\n        <option value="EAN-13" >EAN-13</option>\n        <option value="EAN-8" >EAN-8</option>\n        <option value="EAN-5" >EAN-5</option>\n        <option value="EAN-2" >EAN-2</option>\n        <option value="UPC（A）" >UPC（A）</option>\n        <option value="ITF" >ITF</option>\n        <option value="ITF-14" >ITF-14</option>\n        <option value="MSI" >MSI</option>\n            <option value="MSI10" >MSI10</option>\n            <option value="MSI11" >MSI11</option>\n            <option value="MSI1010" >MSI1010</option>\n            <option value="MSI1110" >MSI1110</option>\n            <option value="Pharmacode" >Pharmacode</option>\n        </select>\n        </div>\n    </div>`
         ), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
@@ -4246,7 +4624,7 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function () {
         return this.target = $(
-          ' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        二维码容错率\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="1" >7% L</option>\n        <option value="0" >15% M</option>\n        <option value="3" >25% Q</option>\n        <option value="2" >30% H</option>\n        </select>\n        </div>\n    </div>'
+          `<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('二维码容错率')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="1" >7% L</option>\n        <option value="0" >15% M</option>\n        <option value="3" >25% Q</option>\n        <option value="2" >30% H</option>\n        </select>\n        </div>\n    </div>`
         ), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
@@ -4264,7 +4642,7 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function () {
         return this.target = $(
-          ' <div class="hiprint-option-item ">\n        <div class="hiprint-option-item-label">\n        单元格高度\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="条形码、二维码以及图片有效" class="auto-submit" >\n        </div>\n    </div>'
+          `<div class="hiprint-option-item ">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格高度')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('条形码、二维码以及图片有效')}" class="auto-submit" >\n        </div>\n    </div>`
         ), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
@@ -4281,7 +4659,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $('<div class="hiprint-option-item"><div class="hiprint-option-item-label">底部聚合标题</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">默认</option><option value="true">显示</option><option value="false">隐藏</option></select></div></div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item"><div class="hiprint-option-item-label">${i18n.__('底部聚合标题')}</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">${i18n.__('默认')}</option><option value="true">${i18n.__('显示')}</option><option value="false">${i18n.__('隐藏')}</option></select></div></div>`), this.target;
       }, t.prototype.getValue = function () {
         return !("false" == this.target.find("select").val());
       }, t.prototype.setValue = function (t) {
@@ -4296,7 +4674,23 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        底部聚合文本\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="聚合类型:" class="auto-submit" >\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('底部聚合文本')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('聚合类型')}:" class="auto-submit" >\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("input").val();
+        if (t) return t.toString();
+      }, t.prototype.setValue = function (t) {
+        this.target.find("input").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    tableSummaryColspan = function () {
+      function t() {
+        this.name = "tableSummaryColspan";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('底部聚合合并列数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="number" min="0" step="1" placeholder="${i18n.__('合并列数')}" class="auto-submit" >\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return t.toString();
@@ -4312,7 +4706,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        底部聚合类型左右对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="left" >居左</option>\n        <option value="center" >居中</option>\n        <option value="right" >居右</option>\n        <option value="justify" >两端对齐</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('底部聚合类型左右对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="left" >${i18n.__('居左')}</option>\n        <option value="center" >${i18n.__('居中')}</option>\n        <option value="right" >${i18n.__('居右')}</option>\n        <option value="justify" >${i18n.__('两端对齐')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4328,15 +4722,15 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        var list = [{t: '整数',v: '0'}], num = [1,2,3,4,5,6];
+        var list = [{t: `${i18n.__('整数')}`,v: '0'}], num = [1,2,3,4,5,6];
         num.forEach(function (n) {
-          list.push({t: '保留' + n + '位', v: '' + n})
+          list.push({t: i18n.__n(`保留%s位`, n), v: '' + n})
         })
-        var n = '\n            <option value="" >默认</option>';
+        var n = `\n            <option value="" >${i18n.__('默认')}</option>`;
         list.forEach(function (e) {
           n += '\n            <option value="' + (e.v || "") + '">' + (e.t || "") + '</option>';
         })
-        this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        底部聚合小数\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit"></select>\n        </div>\n    </div>')
+        this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('底部聚合小数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit"></select>\n        </div>\n    </div>`)
         this.target.find(".auto-submit").append($(n));
         return this.target;
       }, t.prototype.getValue = function () {
@@ -4348,6 +4742,47 @@ var hiprint = function (t) {
         this.target.remove();
       }, t;
     }(),
+    showCodeTitle = (function () {
+      function t() {
+        this.name = 'showCodeTitle'
+      }
+      return (
+        (t.prototype.createTarget = function () {
+          return (
+            (this.target = $(
+              ` <div class="hiprint-option-item" title="条形码底部是否显示内容">\n        <div class="hiprint-option-item-label">\n          ${i18n.__('显示码值')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n            <option value="true" >${i18n.__('显示')}</option>\n            <option value="false" >${i18n.__('隐藏')}</option>\n        </select>\n        </div>\n    </div>`
+            )),
+            this.target
+          )
+        }),
+        (t.prototype.getValue = function () {
+          if ('true' == this.target.find('select').val()) return !0
+        }),
+        (t.prototype.setValue = function (t) {
+          this.target.find('select').val((null == t ? '' : t).toString())
+        }),
+        (t.prototype.destroy = function () {
+          this.target.remove()
+        }),
+        t
+      )
+    })(),
+    tableSummaryFormatter = function () {
+      function t() {
+        this.name = "tableSummaryFormatter";
+      }
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('底部聚合格式化函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(column,fieldPageData,tableData,options){ return \'<td></td>\'; }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("textarea").val();
+        if (t) return t;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+
     upperCase = function () {
       function t() {
         this.name = "upperCase";
@@ -4363,13 +4798,13 @@ var hiprint = function (t) {
           { t: "「金额」人民币壹拾元捌角零分", v: "6" },
           { t: "「金额」壹拾元捌角零分", v: "7" },
         ];
-        var n = '\n<option value="">默认</option>';
+        var n = `\n<option value="">${i18n.__('默认')}</option>`;
         list.forEach((e) => {
           n += `\n<option value='${e.v}'>${e.t}</option>`;
         })
         this.target = $(
-			'<div class="hiprint-option-item hiprint-option-item-row">\n<div class="hiprint-option-item-label">\n转大小写\n</div>\n<div class="hiprint-option-item-field">\n<select class="auto-submit"></select>\n</div>\n</div>'
-		);
+			    `<div class="hiprint-option-item hiprint-option-item-row">\n<div class="hiprint-option-item-label">\n${i18n.__('转大小写')}\n</div>\n<div class="hiprint-option-item-field">\n<select class="auto-submit"></select>\n</div>\n</div>`
+		    );
         this.target.find(".auto-submit").append($(n));
         return this.target;
       }, t.prototype.getValue = function () {
@@ -4381,14 +4816,14 @@ var hiprint = function (t) {
         this.target.remove();
       }, t;
     }(),
+
     // 表格底部合计栏
     tableSummary = function () {
       function t() {
         this.name = "tableSummary"
       }
-
       return t.prototype.createTarget = function () {
-        return this.target = $('<div class="hiprint-option-item"><div class="hiprint-option-item-label">底部聚合类型</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">不聚合</option><option value="count">计数</option><option value="sum">合计</option><option value="avg">平均值</option><option value="min">最小值</option><option value="max">最大值</option><option value="text">仅文本</option></select></div></div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item"><div class="hiprint-option-item-label">${i18n.__('底部聚合类型')}</div><div class="hiprint-option-item-field"><select class="auto-submit"><option value="">${i18n.__('不聚合')}</option><option value="count">${i18n.__('计数')}</option><option value="sum">${i18n.__('合计')}</option><option value="avg">${i18n.__('平均值')}</option><option value="min">${i18n.__('最小值')}</option><option value="max">${i18n.__('最大值')}</option><option value="text">${i18n.__('仅文本')}</option></select></div></div>`), this.target;
       }, t.prototype.getValue = function () {
         return this.target.find("select").val();
       }, t.prototype.setValue = function (t) {
@@ -4403,12 +4838,42 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        顶部偏移\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="偏移量pt" class="auto-submit">\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('顶部偏移')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="text" placeholder="${i18n.__('偏移量')}pt" class="auto-submit">\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("input").val();
         if (t) return parseFloat(t.toString());
       }, t.prototype.setValue = function (t) {
         this.target.find("input").val(t);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    panelLayoutOptions = function(){
+      function t() {
+        this.name = "panelLayoutOptions";
+      }
+      return t.prototype.createTarget = function () {
+        this.target = $(`<div class="hiprint-option-item hiprint-option-item-row"><div class="hiprint-option-item-label">${i18n.__('面板排列')}</div></div>`);
+        this.layoutType = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;"><div style="width:25%">${i18n.__('排列方式')}:</div><select style="width:75%" class="auto-submit"><option value="column" >${i18n.__('纵向')}</option><option value="row" >${i18n.__('横向')}</option></select></div></div>`)
+        this.layoutRowGap = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;margin-top: 4px"><div style="width:25%">${i18n.__('垂直间距')}:</div><input style="width:75%" type="text" placeholder="${i18n.__('垂直间距mm')}" class="auto-submit"></div>`);
+        this.layoutColumnGap = $(`<div class="hiprint-option-item-field" style="display: flex;align-items: baseline;margin-top: 4px"><div style="width:25%">${i18n.__('水平间距')}:</div><input style="width:75%" type="text" placeholder="${i18n.__('水平间距mm')}" class="auto-submit"></div>`);
+        this.target.append(this.layoutType)
+        this.target.append(this.layoutRowGap)
+        this.target.append(this.layoutColumnGap)
+        return this.target;
+      }, t.prototype.getValue = function () {
+        let opt = {
+          layoutType: this.layoutType.find("select").val() || 'column',
+          layoutRowGap:parseInt(this.layoutRowGap.find('input').val() || 0),
+          layoutColumnGap:parseInt(this.layoutColumnGap.find('input').val() || 0),
+        }
+        let options = Object.assign({}, this.options, opt);
+        return options;
+      }, t.prototype.setValue = function (t) {
+        this.options = t;
+        this.layoutType.find("select").val(t.layoutType || 'column');
+        this.layoutRowGap.find("input").val(t.layoutRowGap);
+        this.layoutColumnGap.find("input").val(t.layoutColumnGap);
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t;
@@ -4419,7 +4884,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        一行多组\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="2" >一行二列</option>\n        <option value="3" >一行三列</option>\n        <option value="4" >一行四列</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('一行多组')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="2" >${i18n.__('一行二列')}</option>\n        <option value="3" >${i18n.__('一行三列')}</option>\n        <option value="4" >${i18n.__('一行四列')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4436,7 +4901,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        一行多组间隔\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.25" >7.25pt</option>\n        <option value="8.5" >8.5pt</option>\n        <option value="9" >9pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('一行多组间隔')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.25" >7.25pt</option>\n        <option value="8.5" >8.5pt</option>\n        <option value="9" >9pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4464,7 +4929,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表格头显示\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="page" >每页显示</option>\n        <option value="first" >首页显示</option>\n        <option value="none" >不显示</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格头显示')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="page" >${i18n.__('每页显示')}</option>\n        <option value="first" >${i18n.__('首页显示')}</option>\n        <option value="none" >${i18n.__('不显示')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4489,7 +4954,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        左内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('左内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4515,7 +4980,7 @@ var hiprint = function (t) {
 
         return null;
       }, t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        右内边距\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('右内边距')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="0.75" >0.75pt</option>\n        <option value="1.5" >1.5pt</option>\n        <option value="2.25" >2.25pt</option>\n        <option value="3" >3pt</option>\n        <option value="3.75" >3.75pt</option>\n        <option value="4.5" >4.5pt</option>\n        <option value="5.25" >5.25pt</option>\n        <option value="6" >6pt</option>\n        <option value="6.75" >6.75pt</option>\n        <option value="7.5" >7.5pt</option>\n        <option value="8.25" >8.25pt</option>\n        <option value="9" >9pt</option>\n        <option value="9.75" >9.75pt</option>\n        <option value="10.5" >10.5pt</option>\n        <option value="11.25" >11.25pt</option>\n        <option value="12" >12pt</option>\n        <option value="12.75" >12.75pt</option>\n        <option value="13.5" >13.5pt</option>\n        <option value="14.25" >14.25pt</option>\n        <option value="15" >15pt</option>\n        <option value="15.75" >15.75pt</option>\n        <option value="16.5" >16.5pt</option>\n        <option value="17.25" >17.25pt</option>\n        <option value="18" >18pt</option>\n        <option value="18.75" >18.75pt</option>\n        <option value="19.5" >19.5pt</option>\n        <option value="20.25" >20.25pt</option>\n        <option value="21" >21pt</option>\n        <option value="21.75" >21.75pt</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return parseFloat(t.toString());
@@ -4533,7 +4998,7 @@ var hiprint = function (t) {
 
       return t.prototype.createTarget = function () {
         var t = this;
-        return this.target = $('\n        <div class="hiprint-option-item-row">\n        <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        数据类型\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="hiprint-option-item-datatype">\n        <option value="" >默认</option>\n        <option value="datetime" >日期时间</option>\n        <option value="boolean" >布尔</option>\n        </select>\n        </div>\n    </div>\n    <div class="hiprint-option-item ">\n        <div class="hiprint-option-item-label ">\n        格式\n        </div>\n        <div class="hiprint-option-item-field">\n        <select  class="auto-submit hiprint-option-item-datatype-select-format">\n        <option value="" >默认</option>\n        \n        </select>\n        <input class="auto-submit  hiprint-option-item-datatype-input-format" type="text" data-type="boolean" placeholder="true:false">\n        </div>\n    </div>\n        </div>\n        '), $(this.target.find(".hiprint-option-item-datatype")).change(function () {
+        return this.target = $(`\n        <div class="hiprint-option-item-row">\n        <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('数据类型')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="hiprint-option-item-datatype">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="datetime" >${i18n.__('日期时间')}</option>\n        <option value="boolean" >${i18n.__('布尔')}</option>\n        </select>\n        </div>\n    </div>\n    <div class="hiprint-option-item ">\n        <div class="hiprint-option-item-label ">\n        ${i18n.__('格式')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select  class="auto-submit hiprint-option-item-datatype-select-format">\n        <option value="" >${i18n.__('默认')}</option>\n        \n        </select>\n        <input class="auto-submit  hiprint-option-item-datatype-input-format" type="text" data-type="boolean" placeholder="true:false">\n        </div>\n    </div>\n        </div>\n`), $(this.target.find(".hiprint-option-item-datatype")).change(function () {
           var e = $(t.target.find(".hiprint-option-item-datatype")).val();
           t.loadFormatSelectByDataType(e), t.submit(t.getValue());
         }), this.target;
@@ -4557,7 +5022,7 @@ var hiprint = function (t) {
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t.prototype.loadFormatSelectByDataType = function (t) {
-        "boolean" === t ? (this.target.find(".hiprint-option-item-datatype-select-format").removeClass("hiprint-option-item-datatype-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-input-format").addClass("hiprint-option-item-datatype-format").show()) : "datetime" === t ? (this.target.find(".hiprint-option-item-datatype-select-format").addClass("hiprint-option-item-datatype-format").show(), this.target.find(".hiprint-option-item-datatype-input-format").removeClass("hiprint-option-item-datatype-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-select-format").html('\n            <option value="" >默认</option>\n            <option value="M/d" >M/d</option>\n            <option value="MM/dd" >MM/dd</option>\n            <option value="yy/M/d" >yy/M/d</option>\n            <option value="yy/MM/dd" >yy/MM/dd</option>\n            <option value="yyyy/M/d" >yyyy/M/d</option>\n            <option value="yyyy/MM/dd" >yyyy/MM/dd</option>\n            <option value="yy/M/d H:m" >yy/M/d H:m</option>\n            <option value="yy/M/d H:m:s" >yy/M/d H:m:s</option>\n            <option value="yy/M/d HH:mm" >yy/M/d HH:mm</option>\n            <option value="yy/M/d HH:mm:ss" >yy/M/d HH:mm:ss</option>\n            <option value="yy/MM/dd H:m" >yy/MM/dd H:m</option>\n            <option value="yy/MM/dd H:m:s" >yy/MM/dd H:m:s</option>\n            <option value="yy/MM/dd HH:mm" >yy/MM/dd HH:mm</option>\n            <option value="yy/MM/dd HH:mm:ss" >yy/MM/dd HH:mm:ss</option>\n            <option value="yyyy/M/d H:m" >yyyy/M/dd H:m</option>\n            <option value="yyyy/M/d H:m:s" >yyyy/M/d H:m:s</option>\n            <option value="yyyy/M/d HH:mm" >yyyy/M/d HH:mm</option>\n            <option value="yyyy/M/d HH:mm:ss" >yyyy/M/d HH:mm:ss</option>\n            <option value="yyyy/MM/dd H:m" >yyyy/MM/dd H:m</option>\n            <option value="yyyy/MM/dd H:m:s" >yyyy/MM/dd H:m:s</option>\n            <option value="yyyy/MM/dd HH:mm" >yyyy/MM/dd HH:mm</option>\n            <option value="yyyy/MM/dd HH:mm:ss" >yyyy/MM/dd HH:mm:ss</option>\n\n            <option value="M-d" >M-d</option>\n            <option value="MM-dd" >MM-dd</option>\n            <option value="yy-M-d" >yy-M-d</option>\n            <option value="yy-MM-dd" >yy-MM-dd</option>\n            <option value="yyyy-M-d" >yyyy-M-d</option>\n            <option value="yyyy-MM-dd" >yyyy-MM-dd</option>\n            <option value="yy-M-d H:m" >yy-M-d H:m</option>\n            <option value="yy-M-d H:m:s" >yy-M-d H:m:s</option>\n            <option value="yy-M-d HH:mm" >yy-M-d HH:mm</option>\n            <option value="yy-M-d HH:mm:ss" >yy-M-d HH:mm:ss</option>\n            <option value="yy-MM-dd H:m" >yy-MM-dd H:m</option>\n            <option value="yy-MM-dd H:m:s" >yy-MM-dd H:m:s</option>\n            <option value="yy-MM-dd HH:mm" >yy-MM-dd HH:mm</option>\n            <option value="yy-MM-dd HH:mm:ss" >yy-MM-dd HH:mm:ss</option>\n            <option value="yyyy-M-d H:m" >yyyy-M-d H:m</option>\n            <option value="yyyy-M-d H:m:s" >yyyy-M-d H:m:s</option>\n            <option value="yyyy-M-d HH:mm" >yyyy-M-d HH:mm</option>\n            <option value="yyyy-M-d HH:mm:ss" >yyyy-M-d HH:mm:ss</option>\n            <option value="yyyy-MM-dd H:m" >yyyy-MM-dd H:m</option>\n            <option value="yyyy-MM-dd H:m:s" >yyyy-MM-dd H:m:s</option>\n            <option value="yyyy-MM-dd HH:mm" >yyyy-MM-dd HH:mm</option>\n            <option value="yyyy-MM-dd HH:mm:ss" >yyyy-MM-dd HH:mm:ss</option>\n        ')) : (this.target.find(".hiprint-option-item-datatype-select-format").show(), this.target.find(".hiprint-option-item-datatype-input-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-format").html('\n            <option value="" >默认</option>\n        '));
+        "boolean" === t ? (this.target.find(".hiprint-option-item-datatype-select-format").removeClass("hiprint-option-item-datatype-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-input-format").addClass("hiprint-option-item-datatype-format").show()) : "datetime" === t ? (this.target.find(".hiprint-option-item-datatype-select-format").addClass("hiprint-option-item-datatype-format").show(), this.target.find(".hiprint-option-item-datatype-input-format").removeClass("hiprint-option-item-datatype-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-select-format").html(`\n            <option value="" >${i18n.__('默认')}</option>\n            <option value="M/d" >M/d</option>\n            <option value="MM/dd" >MM/dd</option>\n            <option value="yy/M/d" >yy/M/d</option>\n            <option value="yy/MM/dd" >yy/MM/dd</option>\n            <option value="yyyy/M/d" >yyyy/M/d</option>\n            <option value="yyyy/MM/dd" >yyyy/MM/dd</option>\n            <option value="yy/M/d H:m" >yy/M/d H:m</option>\n            <option value="yy/M/d H:m:s" >yy/M/d H:m:s</option>\n            <option value="yy/M/d HH:mm" >yy/M/d HH:mm</option>\n            <option value="yy/M/d HH:mm:ss" >yy/M/d HH:mm:ss</option>\n            <option value="yy/MM/dd H:m" >yy/MM/dd H:m</option>\n            <option value="yy/MM/dd H:m:s" >yy/MM/dd H:m:s</option>\n            <option value="yy/MM/dd HH:mm" >yy/MM/dd HH:mm</option>\n            <option value="yy/MM/dd HH:mm:ss" >yy/MM/dd HH:mm:ss</option>\n            <option value="yyyy/M/d H:m" >yyyy/M/dd H:m</option>\n            <option value="yyyy/M/d H:m:s" >yyyy/M/d H:m:s</option>\n            <option value="yyyy/M/d HH:mm" >yyyy/M/d HH:mm</option>\n            <option value="yyyy/M/d HH:mm:ss" >yyyy/M/d HH:mm:ss</option>\n            <option value="yyyy/MM/dd H:m" >yyyy/MM/dd H:m</option>\n            <option value="yyyy/MM/dd H:m:s" >yyyy/MM/dd H:m:s</option>\n            <option value="yyyy/MM/dd HH:mm" >yyyy/MM/dd HH:mm</option>\n            <option value="yyyy/MM/dd HH:mm:ss" >yyyy/MM/dd HH:mm:ss</option>\n\n            <option value="M-d" >M-d</option>\n            <option value="MM-dd" >MM-dd</option>\n            <option value="yy-M-d" >yy-M-d</option>\n            <option value="yy-MM-dd" >yy-MM-dd</option>\n            <option value="yyyy-M-d" >yyyy-M-d</option>\n            <option value="yyyy-MM-dd" >yyyy-MM-dd</option>\n            <option value="yy-M-d H:m" >yy-M-d H:m</option>\n            <option value="yy-M-d H:m:s" >yy-M-d H:m:s</option>\n            <option value="yy-M-d HH:mm" >yy-M-d HH:mm</option>\n            <option value="yy-M-d HH:mm:ss" >yy-M-d HH:mm:ss</option>\n            <option value="yy-MM-dd H:m" >yy-MM-dd H:m</option>\n            <option value="yy-MM-dd H:m:s" >yy-MM-dd H:m:s</option>\n            <option value="yy-MM-dd HH:mm" >yy-MM-dd HH:mm</option>\n            <option value="yy-MM-dd HH:mm:ss" >yy-MM-dd HH:mm:ss</option>\n            <option value="yyyy-M-d H:m" >yyyy-M-d H:m</option>\n            <option value="yyyy-M-d H:m:s" >yyyy-M-d H:m:s</option>\n            <option value="yyyy-M-d HH:mm" >yyyy-M-d HH:mm</option>\n            <option value="yyyy-M-d HH:mm:ss" >yyyy-M-d HH:mm:ss</option>\n            <option value="yyyy-MM-dd H:m" >yyyy-MM-dd H:m</option>\n            <option value="yyyy-MM-dd H:m:s" >yyyy-MM-dd H:m:s</option>\n            <option value="yyyy-MM-dd HH:mm" >yyyy-MM-dd HH:mm</option>\n            <option value="yyyy-MM-dd HH:mm:ss" >yyyy-MM-dd HH:mm:ss</option>\n`)) : (this.target.find(".hiprint-option-item-datatype-select-format").show(), this.target.find(".hiprint-option-item-datatype-input-format").hide().val(""), this.target.find(".hiprint-option-item-datatype-format").html(`\n            <option value="" >${i18n.__('默认')}</option>\n`));
       }, t;
     }(),
     ft = function () {
@@ -4566,7 +5031,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        var t = ' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        格式化函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value, options,templateData){}" class="auto-submit"></textarea>\n        </div>\n    </div>';
+        var t = `<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('格式化函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(title,value,options,templateData,target){}" class="auto-submit"></textarea>\n        </div>\n    </div>`;
         return this.target = $(t), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
@@ -4583,7 +5048,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        样式函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value, options, target,templateData){}" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('样式函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value, options, target,templateData){}" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4599,12 +5064,27 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        行/列合并函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options,rows,data){ return [1,1] }; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('行/列合并函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(data, col, colIndex, rowIndex, tableData, printData){ return [1,1] }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
       }, t.prototype.setValue = function (t) {
         this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    rowsColumnsMergeClean = function () {
+      function t() {
+        this.name = "rowsColumnsMergeClean";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('跨页合并是否清除')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="true" >${i18n.__('是')}</option>\n        <option value="false" >${i18n.__('否')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        if ("true" == this.target.find("select").val()) return !0;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val((null == t ? "" : t).toString());
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t;
@@ -4615,7 +5095,70 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        表格脚函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options,rows,data){ return \'<tr></tr>\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格脚函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options,rows,data,pageData,pageIndex){ return \'<tr></tr>\' }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("textarea").val();
+        if (t) return t;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    groupSequenceContinue = function () {
+      function t() {
+        this.name = "groupSequenceContinue";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('分组序号续编')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="true" >${i18n.__('是')}</option>\n        <option value="false" >${i18n.__('否')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        if ("true" == this.target.find("select").val()) return !0;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("select").val((null == t ? "" : t).toString());
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    groupFieldsFormatter = function () {
+      function t() {
+        this.name = "groupFieldsFormatter";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('分组字段函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(type,options,data){ return [] }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("textarea").val();
+        if (t) return t;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    groupFormatter = function () {
+      function t() {
+        this.name = "groupFormatter";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('分组头格式化函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(colTotal,tableData,printData,groupData,options){ return \'${i18n.__('分组头信息')}(html)\' }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("textarea").val();
+        if (t) return t;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    groupFooterFormatter = function () {
+      function t() {
+        this.name = "groupFooterFormatter";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('分组脚格式化函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(colTotal,tableData,printData,groupData,options){ return \'${i18n.__('分组脚信息')}(html)\' }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4631,7 +5174,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        多组表格脚函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options,rows,data){ return \'\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('多组表格脚函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options,rows,data,pageData){ return \'\' }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4647,7 +5190,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        行样式函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,options){ return \'\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('行样式函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,options){ return \'\' }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4663,7 +5206,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        单元格左右对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="left" >居左</option>\n        <option value="center" >居中</option>\n        <option value="right" >居右</option>\n        <option value="justify" >两端对齐</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格左右对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="left" >${i18n.__('居左')}</option>\n        <option value="center" >${i18n.__('居中')}</option>\n        <option value="right" >${i18n.__('居右')}</option>\n        <option value="justify" >${i18n.__('两端对齐')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4679,7 +5222,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        单元格上下对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="top" >上</option>\n        <option value="middle" >中</option>\n        <option value="bottom" >居右</option>\n        \n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格上下对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="top" >${i18n.__('上')}</option>\n        <option value="middle" >${i18n.__('中')}</option>\n        <option value="bottom" >${i18n.__('下')}</option>\n        \n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4695,7 +5238,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表格头单元格左右对齐\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="left" >居左</option>\n        <option value="center" >居中</option>\n        <option value="right" >居右</option>\n        <option value="justify" >两端对齐</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格头单元格左右对齐')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="left" >${i18n.__('居左')}</option>\n        <option value="center" >${i18n.__('居中')}</option>\n        <option value="right" >${i18n.__('居右')}</option>\n        <option value="justify" >${i18n.__('两端对齐')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4711,7 +5254,23 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        单元格样式函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,index,options){ return {color:\'red\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格样式函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,index,options){ return {color:\'red\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("textarea").val();
+        if (t) return t;
+      }, t.prototype.setValue = function (t) {
+        this.target.find("textarea").val(t ? t.toString() : null);
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    stylerHeader = function () {
+      function t() {
+        this.name = "stylerHeader";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格头样式函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(options){ return {color:\'red\' }; }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4727,7 +5286,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        单元格格式化函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,index,options){ return \'\'; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格格式化函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,index,options){ return \'\'; }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4743,7 +5302,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        单元格渲染函数\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,index,options){ return \'<td></td>\'; }" class="auto-submit"></textarea>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item hiprint-option-item-row">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('单元格渲染函数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <textarea style="height:80px;" placeholder="function(value,row,colIndex,options,rowIndex){ return \'<td></td>\'; }" class="auto-submit"></textarea>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("textarea").val();
         if (t) return t;
@@ -4759,11 +5318,27 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        自动补全\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="true" >是</option>\n        <option value="false" >否</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('自动补全')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="true" >${i18n.__('是')}</option>\n        <option value="false" >${i18n.__('否')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         if ("true" == this.target.find("select").val()) return !0;
       }, t.prototype.setValue = function (t) {
         this.target.find("select").val((null == t ? "" : t).toString());
+      }, t.prototype.destroy = function () {
+        this.target.remove();
+      }, t;
+    }(),
+    maxRows = function () {
+      function t() {
+        this.name = "maxRows";
+      }
+
+      return t.prototype.createTarget = function () {
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('每页最大行数')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <input type="number" value="1" step="1" min="1" class="auto-submit"/>\n        </div>\n    </div>`), this.target;
+      }, t.prototype.getValue = function () {
+        var t = this.target.find("input").val();
+        if (t) return parseInt(t.toString());
+      }, t.prototype.setValue = function (t) {
+        this.target.find("input").val(t);
       }, t.prototype.destroy = function () {
         this.target.remove();
       }, t;
@@ -4774,7 +5349,7 @@ var hiprint = function (t) {
       }
 
       return t.prototype.createTarget = function () {
-        return this.target = $(' <div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        表格脚显示\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >默认</option>\n        <option value="no" >不显示</option>\n        <option value="page" >每页显示</option>\n        <option value="last" >最后显示</option>\n        </select>\n        </div>\n    </div>'), this.target;
+        return this.target = $(`<div class="hiprint-option-item">\n        <div class="hiprint-option-item-label">\n        ${i18n.__('表格脚显示')}\n        </div>\n        <div class="hiprint-option-item-field">\n        <select class="auto-submit">\n        <option value="" >${i18n.__('默认')}</option>\n        <option value="no" >${i18n.__('不显示')}</option>\n        <option value="page" >${i18n.__('每页显示')}</option>\n        <option value="last" >${i18n.__('最后显示')}</option>\n        </select>\n        </div>\n    </div>`), this.target;
       }, t.prototype.getValue = function () {
         var t = this.target.find("select").val();
         if (t) return t.toString();
@@ -4802,7 +5377,7 @@ var hiprint = function (t) {
       t.init(), t.printElementOptionItems[e.name] = e;
     }, t.getItem = function (e) {
       return t.init(), t.printElementOptionItems[e];
-    }, t._printElementOptionItems = [new fontFamily(), new r(), new a(), new p(), new i(), new s(), new l(), new pt(), new u(), new d(), new c(), new h(), new f(), new g(), new m(), new d2(), new c2(), new v(), new y(), new b(), new E(), new qrCodeLevel(), new T(), new P(), new _(), new w(), new x(), new coordinate(), new widthHeight(), new C(), new imageFit(), new O(), new H(), new D(), new I(), new R(), new pageBreak(), new M(), new M2(), new S(), new B(), new F(), new L(), new A(), new z(), new k(), new st(), new N(), new V(), new W(), new j(), new U(), new zIndex(), new K(), new G(), new q(), new X(), new Y(), new Q(), new J(), new Z(), new tt(), new et(), new nt(), new it(), new ot(), new at(), new lt(), new ut(), new ith(), new dt(), new ct(), new ht(), new ft(), new gt(), new mt(), new rowcolumns(), new vt(), new yt(), new bt(), new Tt(), new Et(), new Pt(), new renderFormatter(), new _t(), new wt(), new xt(), new tableColumnH(), new tableE(), new tableQRCodeLevel(), new tablept(), new tableSummaryTitle(), new tableSummaryText(), new tableSummary(), new tableSummaryAlign(), new tableSummaryNumFormat(), new upperCase()], t;
+    }, t._printElementOptionItems = [new fontFamily(), new r(), new a(), new p(), new i(), new s(), new l(), new pt(), new u(), new d(), new c(), new h(), new f(), new g(), new m(), new d2(), new c2(), new v(), new y(), new b(), new E(), new qrCodeLevel(), new T(), new P(), new _(), new w(), new x(), new coordinate(), new widthHeight(), new C(), new imageFit(), new O(), new H(), new D(), new paperNumberContinue(), new watermarkOptions(), new I(), new R(), new pageBreak(), new M(), new M2(), new S(), new B(), new F(), new L(), new A(), new z(), new k(), new st(), new N(), new V(), new W(), new j(), new U(), new borderRadius(), new zIndex(), new K(), new G(), new q(), new X(), new Y(), new Q(), new J(), new Z(), new tt(), new et(), new nt(), new it(), new ot(),new textWrap(), new at(), new lt(), new panelLayoutOptions(), new ut(), new ith(), new dt(), new ct(), new ht(), new ft(), new gt(), new mt(), new rowcolumns(), new rowsColumnsMergeClean(), new groupSequenceContinue(), new groupFieldsFormatter(), new groupFormatter(), new groupFooterFormatter(), new vt(), new yt(), new bt(), new Tt(), new Et(), new Pt(), new stylerHeader(), new renderFormatter(), new _t(), new wt(), new maxRows(), new xt(), new tableColumnH(), new tableE(), new tableQRCodeLevel(), new tablept(), new tableSummaryTitle(), new tableSummaryText(), new tableSummaryColspan(), new tableSummary(), new tableSummaryAlign(), new tableSummaryNumFormat(), new tableSummaryFormatter(),new showCodeTitle(), new upperCase(), new barcodeType(), new qrcodeType(), new barColor(), new barTextMode(), new barWidth(), new barAutoWidth()], t;
   }();
 }, function (t, e, n) {
   "use strict";
@@ -5121,11 +5696,13 @@ var hiprint = function (t) {
         if (!this.getField() && this.options.content) return (n = $("<div></div>")).append(this.options.content), (i = n.find("table")).addClass("hiprint-printElement-tableTarget"), i;
         if (this.printElementType.formatter) return (n = $("<div></div>")).append(this.printElementType.formatter(t)), (i = n.find("table")).addClass("hiprint-printElement-tableTarget"), i;
         var o = $('<table class="hiprint-printElement-tableTarget" style="border-collapse: collapse;"></table>');
-        return o.append(_table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableHead(this.getColumns(), this.options.getWidth() / this.options.getGridColumns())), o.append(_table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableRow(this.getColumns(), t, this.options, this.printElementType)), "no" == this.options.tableFooterRepeat || _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableFooter(this.printElementType.columns, t, this.options, this.printElementType, e, t).insertBefore(o.find("tbody")), o;
+        let headerList = _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableHead(this.getColumns(), this.options.getWidth() / this.options.getGridColumns());
+        return this.isNotDesign ? o.append(headerList) : o.append(headerList[0]), o.append(_table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableRow(this.getColumns(), t, e, this.options, this.printElementType)), "no" == this.options.tableFooterRepeat || _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableFooter(this.printElementType.columns, t, this.options, this.printElementType, e, t).insertBefore(o.find("tbody")), o;
       }, TablePrintElement.prototype.getEmptyRowTarget = function () {
-        return _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createEmptyRowTarget(this.getColumns());
+        return _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createEmptyRowTarget(this.getColumns(), this);
       }, TablePrintElement.prototype.getHtml = function (t, e) {
         this.createTempContainer();
+        this.isNotDesign = e != void 0;
         var n = this.getPaperHtmlResult(t, e);
         return this.removeTempContainer(), n;
       }, TablePrintElement.prototype.getPaperHtmlResult = function (t, e) {
@@ -5148,7 +5725,7 @@ var hiprint = function (t) {
             h = this.getRowsInSpecificHeight(e, u > 0 ? u : 0 == s ? d - p : t.getContentHeight(s), r, o, s, c, tfh);
           l = h.isEnd;
           if (u < 0) {
-            n[0].target = $('<div style="position:absolute;background: red;color: white;padding: 0px 4px;">没有足够空间进行表格分页，请调整页眉/页脚线</div>')
+            n[0].target = $(`<div style="position:absolute;background: red;color: white;padding: 0px 4px;">${i18n.__('没有足够空间进行表格分页，请调整页眉/页脚线')}</div>`)
             n[0].printLine = p;
             n[0].referenceElement = new _PrintReferenceElement__WEBPACK_IMPORTED_MODULE_4__.a({
               top: this.options.getTop(),
@@ -5211,6 +5788,18 @@ var hiprint = function (t) {
           }
         }
         var noPaging = "none" == this.panel.panelPageRule;
+        // 不分页, 且不是设计时, 移除 thead
+        var headTr;
+        if (t && noPaging) {
+          var headStyle = n.find(".hiprint-printElement-tableTarget thead").attr("style");
+          headTr = n.find(".hiprint-printElement-tableTarget thead tr").clone();
+          if (headStyle) {
+            headTr.attr("style", headStyle);
+          } else {
+            headTr.css({"background": "#e8e8e8"});
+          }
+          n.find(".hiprint-printElement-tableTarget thead").remove();
+        }
         var s = n.outerHeight();
         if (!noPaging && s > p) return {
           target: void 0,
@@ -5229,6 +5818,9 @@ var hiprint = function (t) {
                 isEnd: !0
               }, t && this.options.autoCompletion && (this.autoCompletion(p, d, tfh), s = n.outerHeight()); else {
                 var f = a.find("tr:lt(1)");
+                if (h.length == 0 && headTr) {
+                  d.find("tbody").append(headTr);
+                }
                 d.find("tbody").append(f);
                 var g = f.data("rowData");
                 l.push(g), h.push(g), s = n.outerHeight();
@@ -5243,9 +5835,12 @@ var hiprint = function (t) {
                 isEnd: !0
               }, t && this.options.autoCompletion && (this.autoCompletion(p, d, tfh), s = d.outerHeight()); else {
                 var f = a.find("tr:lt(1)");
+                if (that.options.rowsColumnsMerge && (o > 0 || u > 0) && h.length == 0) {
+                  f = that.fixMergeSpan(f, a);
+                }
                 d.find("tbody").append(f);
                 var g = f.data("rowData");
-                l.push(g), h.push(g), (s = d.outerHeight(), s += tfh) > p && (a.prepend(f), l.pop(), h.pop(), s = d.outerHeight(), c = {
+                l.push(g), h.push(g), (((s = d.outerHeight(), "last" == this.options.tableFooterRepeat ? s : s += tfh) > p) || (this.options.maxRows && h.length > +this.options.maxRows)) && (a.prepend(f), l.pop(), h.pop(), s = d.outerHeight(), c = {
                   height: _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_3__.a.px.toPt(s),
                   isEnd: !1
                 });
@@ -5256,7 +5851,11 @@ var hiprint = function (t) {
               // 这里是table 没有tfoot, 后面再看什么原因...
               if ("last" == this.options.tableFooterRepeat && !c.isEnd) break;
               if ("no" !== this.options.tableFooterRepeat) {
-                _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableFooter(this.printElementType.columns, this.getData(t), this.options, this.printElementType, t, h).insertBefore(d.find("tbody"));
+                if (noPaging) {
+                  d.find("tbody").append(_table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableFooter(this.printElementType.columns, this.getData(t), this.options, this.printElementType, t, h, o).children())
+                } else {
+                  _table_TableExcelHelper__WEBPACK_IMPORTED_MODULE_6__.a.createTableFooter(this.printElementType.columns, this.getData(t), this.options, this.printElementType, t, h, o).insertBefore(d.find("tbody"));
+                }
                 that.css(d, t);
               }
               break;
@@ -5268,6 +5867,19 @@ var hiprint = function (t) {
           v = this.getGridColumnsFooterFormatter();
         v && n.find(this.gridColumnsFooterCss).html(v(this.options, this.getData(t), t, l));
         s = n.outerHeight();
+        // 当每一页数据,都无法容纳表格行内容时:
+        let curRow = a.find("tr:lt(1)");
+        if (m == 0 && curRow.length && g == curRow.data("rowData")) {
+          d.find("tbody").append(curRow);
+          let height = d.find("tbody tr").outerHeight();
+          a.prepend(curRow);
+          return {
+            target: $(`<div style="position:absolute;background: red;color: white;padding: 0px 4px;">${i18n.__('没有足够空间,显示下方内容, 可分页高度')}: `+ p +`px < ${i18n.__('当前需要高度')}: `+ height +'px</div>').append(curRow.css("background", "blue")),
+            length: m,
+            height: _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_3__.a.px.toPt(s),
+            isEnd: !1
+          }
+        }
         // 方便调试看 值...
         var zz = 0 == a.find("tr").length ? 0 == m && r ? {
           target: void 0,
@@ -5286,14 +5898,52 @@ var hiprint = function (t) {
           isEnd: !1
         };
         return zz;
+      }, TablePrintElement.prototype.fixMergeSpan = function (tr, tbody) {
+        const nextRowMap = new Map();
+        tr.children().each((_, td) => {
+          var field = $(td).attr('field');
+          nextRowMap.set(field, {
+            rowSpan: 1,
+            rowEnd: false
+          })
+          tr.nextAll().each((_, nextTr) => {
+            if ($(nextTr).has(`td[field=${field}][rowspan=0]`).length && !nextRowMap.get(field).rowEnd) {
+              nextRowMap.set(field, { rowSpan: ++nextRowMap.get(field).rowSpan, rowEnd: false })
+            } else {
+              nextRowMap.set(field, { ...nextRowMap.get(field), rowEnd: true })
+            }
+          })
+
+          if ($(td).attr("rowspan") < 1) {
+            $(td).attr("rowspan", nextRowMap.get(field).rowSpan);
+            $(td).css("display", "");
+            if (this.options.rowsColumnsMergeClean) {
+              $(td).text("")
+            }
+          }
+        })
+        return tr;
       }, TablePrintElement.prototype.autoCompletion = function (t, e, tfh) {
+        var that = this;
         for (var n, i = this.getEmptyRowTarget(), o = e.outerHeight() + tfh; t > o;) {
           n = i.clone(), e.find("tbody").append(n), o = e.outerHeight() + tfh;
+          if (that.options.maxRows && e.find("tbody").children().length > that.options.maxRows) {
+            break;
+          }
         }
 
         n && n.remove();
       }, TablePrintElement.prototype.getData = function (t) {
-        if (!t) return [{}];
+        if (!t) {
+          // 设计时表格 测试数据
+          try {
+            let testData = this.options.testData || '[{}]';
+            return JSON.parse(testData);
+          } catch (e) {
+            console.log('table testData parse error', e);
+            return [{}];
+          }
+        };
         var f = this.getField();
         var e = f ? f.split('.').reduce((a, c) => a ? a[c] : t ? t[c] : "", !1) || "" : "";
         return e ? JSON.parse(JSON.stringify(e)) : [];
@@ -5347,6 +5997,7 @@ var hiprint = function (t) {
       }, TablePrintElement.prototype.setHitable = function () {
         var t = this;
         this.hitable = new _hitable_HiTale__WEBPACK_IMPORTED_MODULE_7__.a({
+          templateId: t.templateId,
           table: this.designTarget.find(".hiprint-printElement-tableTarget:eq(0)"),
           rows: this.getColumns(),
           resizeRow: !1,
@@ -5369,6 +6020,7 @@ var hiprint = function (t) {
           isEnableMergeCell: this.printElementType.isEnableMergeCell != undefined ? this.printElementType.isEnableMergeCell : !0
         }), _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_3__.a.event.on("updateTable" + this.hitable.id, function () {
           t.updateDesignViewFromOptions();
+          _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_3__.a.event.trigger("hiprintTemplateDataChanged_" + t.templateId, "调整表头");
         });
       }, TablePrintElement.prototype.setColumnsOptions = function () {
         var t = this;
@@ -5382,13 +6034,13 @@ var hiprint = function (t) {
             _assets_plugins_hinnn__WEBPACK_IMPORTED_MODULE_3__.a.event.trigger(t.getPrintElementSelectEventKey(), {
               printElement: t,
               customOptionsInput: [{
-                title: (i.title || `${i.id}(id)`) + "-列属性",
+                title: (i.title || `${i.id}(id)`) + `-${i18n.__('列属性')}`,
                 optionItems: o,
                 options: i,
                 callback: function callback(t) {
                   o.forEach(function (t) {
                     var e = t.getValue();
-                    if ("title" == t.name && !e.trim().endsWith("#") && !e.trim().startsWith("#")) {
+                    if ("title" == t.name && e && !e.trim().endsWith("#") && !e.trim().startsWith("#")) {
                       var n = e ? e.split("#") : "";
                       i.title = n[0], n.length > 1 && (i.columnId = i.field = n[1]);
                       i.columnId && i.target.attr("column-id", i.columnId);
@@ -5435,7 +6087,7 @@ var hiprint = function (t) {
 
   var i = function () {
       return function (t) {
-        this.table = t.table, this.fields = t.fields, this.isEnableEdit = t.isEnableEdit, this.trs = t.trs, this.resizeRow = t.resizeRow, this.resizeColumn = t.resizeColumn, this.isEnableEditField = t.isEnableEditField, this.isEnableContextMenu = t.isEnableContextMenu, this.isEnableEditField = t.isEnableEditField, this.isEnableInsertRow = t.isEnableInsertRow, this.isEnableDeleteRow = t.isEnableDeleteRow, this.isEnableInsertColumn = t.isEnableInsertColumn, this.isEnableDeleteColumn = t.isEnableDeleteColumn, this.isEnableMergeCell = t.isEnableMergeCell, this.columnResizable = t.columnResizable, this.columnAlignEditable = t.columnAlignEditable;
+        this.table = t.table, this.templateId = t.templateId, this.fields = t.fields, this.isEnableEdit = t.isEnableEdit, this.trs = t.trs, this.resizeRow = t.resizeRow, this.resizeColumn = t.resizeColumn, this.isEnableEditField = t.isEnableEditField, this.isEnableContextMenu = t.isEnableContextMenu, this.isEnableEditField = t.isEnableEditField, this.isEnableInsertRow = t.isEnableInsertRow, this.isEnableDeleteRow = t.isEnableDeleteRow, this.isEnableInsertColumn = t.isEnableInsertColumn, this.isEnableDeleteColumn = t.isEnableDeleteColumn, this.isEnableMergeCell = t.isEnableMergeCell, this.columnResizable = t.columnResizable, this.columnAlignEditable = t.columnAlignEditable;
       };
     }(),
     o = function () {
@@ -5608,8 +6260,9 @@ var hiprint = function (t) {
         }), this.target.before(i), this.rgripContariner = new d(i, n), this.syncRowGrips();
       }, t.prototype.syncGrips = function (t, e) {
         var n = t.getTarget();
+        var scale = ($('.hiprint-printPaper')[0].style.transform && parseFloat($('.hiprint-printPaper')[0].style.transform.slice(6, -1))) || 1;
         e.cell = t, e.target.css({
-          left: n.offset().left - this.target.offset().left + n.outerWidth(!1),
+          left: (n.offset().left / scale) - (this.target.offset().left / scale) + n.outerWidth(!1),
           height: 30
         });
       }, t.prototype.syncRowGrips = function () {
@@ -5898,7 +6551,7 @@ var hiprint = function (t) {
       if (!this.optionsCoat.options.isEnableContextMenu) return !1;
       $(this.handle).hicontextMenu({
         menus: [{
-          text: "在上方插入行",
+          text: `${i18n.__('在上方插入行')}`,
           enabled: this.optionsCoat.options.isEnableInsertRow,
           disable: function disable() {
             return !t.tableCellSelector.getSingleSelect();
@@ -5907,7 +6560,7 @@ var hiprint = function (t) {
             t.insertRow("above"), t.resizer.updateRowGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "在下方插入行",
+          text: `${i18n.__('在下方插入行')}`,
           borderBottom: !0,
           enabled: this.optionsCoat.options.isEnableInsertRow,
           disable: function disable() {
@@ -5917,7 +6570,7 @@ var hiprint = function (t) {
             t.insertRow("below"), t.resizer.updateRowGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "向左方插入列",
+          text: `${i18n.__('向左方插入列')}`,
           enabled: this.optionsCoat.options.isEnableInsertColumn,
           disable: function disable() {
             return !t.tableCellSelector.getSingleSelect();
@@ -5926,7 +6579,7 @@ var hiprint = function (t) {
             t.insertColumn("left"), t.resizer.updateColumnGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "向右方插入列",
+          text: `${i18n.__('向右方插入列')}`,
           enabled: this.optionsCoat.options.isEnableInsertColumn,
           disable: function disable() {
             return !t.tableCellSelector.getSingleSelect();
@@ -5936,7 +6589,7 @@ var hiprint = function (t) {
             t.insertColumn("right"), t.resizer.updateColumnGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "删除行",
+          text: `${i18n.__('删除行')}`,
           enabled: this.optionsCoat.options.isEnableDeleteRow,
           disable: function disable() {
             return !t.tableCellSelector.getSingleSelect() || t.rows.length <= 1;
@@ -5945,7 +6598,7 @@ var hiprint = function (t) {
             t.deleteRow(), t.resizer.updateRowGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "删除列",
+          text: `${i18n.__('删除列')}`,
           borderBottom: !0,
           enabled: this.optionsCoat.options.isEnableDeleteColumn,
           disable: function disable() {
@@ -5955,53 +6608,53 @@ var hiprint = function (t) {
             t.deleteColums(), t.resizer.updateColumnGrips(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "对齐",
+          text: `${i18n.__('对齐')}`,
           borderBottom: !0,
           enabled: this.optionsCoat.options.columnAlignEditable,
           menus: [{
-            text: "左",
+            text: `${i18n.__('左')}`,
             callback: function callback() {
               t.setAlign("left");
             }
           }, {
-            text: "左右居中",
+            text: `${i18n.__('左右居中')}`,
             callback: function callback() {
               t.setAlign("center");
             }
           }, {
-            text: "右",
+            text: `${i18n.__('右')}`,
             callback: function callback() {
               t.setAlign("right");
             }
           }, {
-            text: "默认",
+            text: `${i18n.__('默认')}`,
             borderBottom: !0,
             callback: function callback() {
               t.setAlign("");
             }
           }, {
-            text: "上",
+            text: `${i18n.__('上')}`,
             callback: function callback() {
               t.setVAlign("top");
             }
           }, {
-            text: "垂直居中",
+            text: `${i18n.__('垂直居中')}`,
             callback: function callback() {
               t.setVAlign("middle");
             }
           }, {
-            text: "下",
+            text: `${i18n.__('下')}`,
             callback: function callback() {
               t.setVAlign("bottom");
             }
           }, {
-            text: "默认",
+            text: `${i18n.__('默认')}`,
             callback: function callback() {
               t.setVAlign("");
             }
           }]
         }, {
-          text: "合并单元格",
+          text: `${i18n.__('合并单元格')}`,
           enabled: this.optionsCoat.options.isEnableMergeCell,
           disable: function disable() {
             return t.tableCellSelector.getSingleSelect();
@@ -6010,7 +6663,7 @@ var hiprint = function (t) {
             t.mergeCell(), r.a.event.trigger("updateTable" + t.id);
           }
         }, {
-          text: "解开单元格",
+          text: `${i18n.__('解开单元格')}`,
           enabled: this.optionsCoat.options.isEnableMergeCell,
           disable: function disable() {
             var e = t.tableCellSelector.getSingleSelect();
@@ -6051,7 +6704,7 @@ var hiprint = function (t) {
     r = (function () {
     }(), function () {
       return function (t) {
-        this.width = t.width, this.title = t.title, this.field = t.field, this.checked = t.checked, this.columnId = t.columnId, this.fixed = !1, this.rowspan = t.rowspan || 1, this.colspan = t.colspan || 1, this.align = t.align, this.halign = t.halign, this.vAlign = t.vAlign, this.renderFormatter = t.renderFormatter, this.formatter2 = t.formatter2, this.styler2 = t.styler2, this.tableColumnHeight = t.tableColumnHeight || 30, this.tableTextType = t.tableTextType || 'text', this.tableBarcodeMode = t.tableBarcodeMode || 'CODE128A', this.tableQRCodeLevel = t.tableQRCodeLevel || 0, this.tableSummaryTitle = t.tableSummaryTitle, this.tableSummaryText = t.tableSummaryText, this.tableSummary = t.tableSummary, this.tableSummaryAlign = t.tableSummaryAlign, this.tableSummaryNumFormat = t.tableSummaryNumFormat, this.upperCase = t.upperCase;
+        this.width = t.width, this.title = t.title, this.field = t.field, this.checked = t.checked, this.columnId = t.columnId, this.fixed = !1, this.rowspan = t.rowspan || 1, this.colspan = t.colspan || 1, this.align = t.align, this.halign = t.halign, this.vAlign = t.vAlign, this.renderFormatter = t.renderFormatter, this.formatter2 = t.formatter2, this.styler2 = t.styler2, this.stylerHeader = t.stylerHeader, this.tableColumnHeight = t.tableColumnHeight, this.tableTextType = t.tableTextType, this.tableBarcodeMode = t.tableBarcodeMode, this.tableQRCodeLevel = t.tableQRCodeLevel, this.tableSummaryTitle = t.tableSummaryTitle, this.tableSummaryText = t.tableSummaryText, this.tableSummaryColspan = t.tableSummaryColspan, this.tableSummary = t.tableSummary, this.tableSummaryAlign = t.tableSummaryAlign, this.tableSummaryNumFormat = t.tableSummaryNumFormat, this.tableSummaryFormatter = t.tableSummaryFormatter, this.showCodeTitle = t.showCodeTitle, this.upperCase = t.upperCase;
       };
     }()),
     a = n(5);
@@ -6187,6 +6840,46 @@ var hiprint = function (t) {
       return p || (r.proxy ? (p = "clone" == r.proxy ? t(i.data.target).clone().insertAfter(i.data.target) : r.proxy.call(i.data.target, i.data.target), o.proxy = p) : p = t(i.data.target)), p.css("position", "absolute"), e(i), n(i), r.onStartDrag.call(i.data.target, i), !1;
     }
 
+    function createVerLine(op, cp, t, tt, h, pc) {
+      if (Math.abs(op[t] - cp[tt]) <= HIPRINT_CONFIG.adsorbLineMin) {
+        if (op.v.length) {
+          op.v.css("left", op[t] + "pt");
+        } else {
+          op.v = $("<div class='verLine id-" + op.id + "'></div>")
+          op.v.css("height", h + "pt");
+          op.v.css("left", op[t] + "pt");
+          pc.append(op.v);
+        }
+      } else {
+        op.v && op.v.remove();
+      }
+    }
+
+    function removeVerLine(op) {
+      if (op) op.v && op.v.remove();
+      $(".verLine").remove();
+    }
+
+    function createHorLine(op, cp, t, tt, w, pc) {
+      if (Math.abs(op[t] - cp[tt]) <= HIPRINT_CONFIG.adsorbLineMin) {
+        if (op.h.length) {
+          op.h.css("top", op[t] + "pt");
+        } else {
+          op.h = $("<div class='horLine id-" + op.id + "'></div>")
+          op.h.css("width", w + "pt");
+          op.h.css("top", op[t] + "pt");
+          pc.append(op.h);
+        }
+      } else {
+        op.h && op.h.remove();
+      }
+    }
+
+    function removeHorLine(op) {
+      if (op) op.h && op.h.remove();
+      $(".horLine").remove();
+    }
+
     function o(i) {
       // 移动开始动作
       var o = t.data(i.data.target, "hidraggable");
@@ -6208,64 +6901,140 @@ var hiprint = function (t) {
           (() => {
             let oPositions = o.options.designTarget.panel.printElements.filter(el => el.id != o.options.designTarget.id).map(el => {
               let {left, top, width, height} = el.options;
+              let right = left + width, vCenter = left + width / 2, hCenter = top + height / 2;
+              let cVCenter = cPosition.left + cPosition.width / 2, cHCenter = cPosition.top + cPosition.height / 2,
+                cRight = cPosition.left + cPosition.width;
+              let distance, d1, d2, d3;
+              d1 = Math.sqrt(Math.pow(left - cPosition.left, 2) + Math.pow(hCenter - cHCenter, 2));
+              d2 = Math.sqrt(Math.pow(vCenter - cVCenter, 2) + Math.pow(hCenter - cHCenter, 2));
+              d3 = Math.sqrt(Math.pow(right - cRight, 2) + Math.pow(hCenter - cHCenter, 2));
+              distance = Math.min(d1, d2, d3);
               return {
                 ...el.options,
+                distance,
+                h: $(".horLine.id-" + el.id),
+                v: $(".verLine.id-" + el.id),
                 bottom: top + height,
                 right: left + width,
-                vCenter: left + width / 2,
-                hCenter: top + height / 2
+                vCenter,
+                hCenter
               }
-            })
-            for (let idx in oPositions) {
+            }).sort((a, b) => a.distance - b.distance).slice(0,1)
+            let paper = o.options.designTarget.designPaper;
+            let paperContent = paper.target.find(".hiprint-printPaper-content");
+            let paperW = paper.width, paperH = paper.height;
+            let showAline = HIPRINT_CONFIG.showAdsorbLine, aMin = HIPRINT_CONFIG.adsorbMin, aLMin = HIPRINT_CONFIG.adsorbLineMin;
+            oPositions.forEach((item,idx) => {
               // 元素左边线
-              if (Math.abs(oPositions[idx].left - cPosition.left) <= 3) {
+              if (Math.abs(oPositions[idx].left - cPosition.left) <= aMin) {
                 cPosition.left = oPositions[idx].left;
-              } else if (Math.abs(oPositions[idx].vCenter - cPosition.left) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].vCenter - cPosition.left) <= aMin) {
                 cPosition.left = oPositions[idx].vCenter;
-              } else if (Math.abs(oPositions[idx].right - cPosition.left) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].right - cPosition.left) <= aMin) {
                 cPosition.left = oPositions[idx].right;
+                removeVerLine(oPositions[idx]);
               }
               // 元素垂直中线
-              if (Math.abs(oPositions[idx].left - cPosition.vCenter) <= 3) {
+              if (Math.abs(oPositions[idx].left - cPosition.vCenter) <= aMin) {
                 cPosition.left = oPositions[idx].left - cPosition.width / 2;
-              } else if (Math.abs(oPositions[idx].vCenter - cPosition.vCenter) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].vCenter - cPosition.vCenter) <= aMin) {
                 cPosition.left = oPositions[idx].vCenter - cPosition.width / 2;
-              } else if (Math.abs(oPositions[idx].right - cPosition.vCenter) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].right - cPosition.vCenter) <= aMin) {
                 cPosition.left = oPositions[idx].right - cPosition.width / 2;
+                removeVerLine(oPositions[idx]);
               }
               // 元素右边线
-              if (Math.abs(oPositions[idx].left - cPosition.right) <= 3) {
+              if (Math.abs(oPositions[idx].left - cPosition.right) <= aMin) {
                 cPosition.left = oPositions[idx].left - cPosition.width;
-              } else if (Math.abs(oPositions[idx].vCenter - cPosition.right) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].vCenter - cPosition.right) <= aMin) {
                 cPosition.left = oPositions[idx].vCenter - cPosition.width;
-              } else if (Math.abs(oPositions[idx].right - cPosition.right) <= 3) {
+                removeVerLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].right - cPosition.right) <= aMin) {
                 cPosition.left = oPositions[idx].right - cPosition.width;
+                removeVerLine(oPositions[idx]);
               }
               // 元素顶边线
-              if (Math.abs(oPositions[idx].top - cPosition.top) <= 3) {
+              if (Math.abs(oPositions[idx].top - cPosition.top) <= aMin) {
                 cPosition.top = oPositions[idx].top;
-              } else if (Math.abs(oPositions[idx].hCenter - cPosition.top) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].hCenter - cPosition.top) <= aMin) {
                 cPosition.top = oPositions[idx].hCenter;
-              } else if (Math.abs(oPositions[idx].bottom - cPosition.top) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].bottom - cPosition.top) <= aMin) {
                 cPosition.top = oPositions[idx].bottom;
+                removeHorLine(oPositions[idx]);
               }
               // 元素水平中线
-              if (Math.abs(oPositions[idx].top - cPosition.hCenter) <= 3) {
+              if (Math.abs(oPositions[idx].top - cPosition.hCenter) <= aMin) {
                 cPosition.top = oPositions[idx].top - cPosition.height / 2;
-              } else if (Math.abs(oPositions[idx].hCenter - cPosition.hCenter) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].hCenter - cPosition.hCenter) <= aMin) {
                 cPosition.top = oPositions[idx].hCenter - cPosition.height / 2;
-              } else if (Math.abs(oPositions[idx].bottom - cPosition.hCenter) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].bottom - cPosition.hCenter) <= aMin) {
                 cPosition.top = oPositions[idx].bottom - cPosition.height / 2;
+                removeHorLine(oPositions[idx]);
               }
               // 元素底边线
-              if (Math.abs(oPositions[idx].top - cPosition.bottom) <= 3) {
+              if (Math.abs(oPositions[idx].top - cPosition.bottom) <= aMin) {
                 cPosition.top = oPositions[idx].top - cPosition.height;
-              } else if (Math.abs(oPositions[idx].hCenter - cPosition.bottom) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].hCenter - cPosition.bottom) <= aMin) {
                 cPosition.top = oPositions[idx].hCenter - cPosition.height;
-              } else if (Math.abs(oPositions[idx].bottom - cPosition.bottom) <= 3) {
+                removeHorLine(oPositions[idx]);
+              } else if (Math.abs(oPositions[idx].bottom - cPosition.bottom) <= aMin) {
                 cPosition.top = oPositions[idx].bottom - cPosition.height;
+                removeHorLine(oPositions[idx]);
               }
-            }
+
+              if (showAline) {
+                if (Math.abs(oPositions[idx].left - cPosition.left) > aMin && Math.abs(oPositions[idx].left - cPosition.left) <= aLMin) { // 左
+                  createVerLine(oPositions[idx], cPosition, "left", "left", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].vCenter - cPosition.left) > aMin && Math.abs(oPositions[idx].vCenter - cPosition.left) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "vCenter", "left", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].right - cPosition.left) > aMin && Math.abs(oPositions[idx].right - cPosition.left) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "right", "left", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].left - cPosition.vCenter) > aMin && Math.abs(oPositions[idx].left - cPosition.vCenter) <= aLMin) { // 中
+                  createVerLine(oPositions[idx], cPosition, "left", "vCenter", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].vCenter - cPosition.vCenter) > aMin && Math.abs(oPositions[idx].vCenter - cPosition.vCenter) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "vCenter", "vCenter", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].right - cPosition.vCenter) > aMin && Math.abs(oPositions[idx].right - cPosition.vCenter) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "right", "vCenter", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].left - cPosition.right) > aMin && Math.abs(oPositions[idx].left - cPosition.right) <= aLMin) { // 右
+                  createVerLine(oPositions[idx], cPosition, "left", "right", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].vCenter - cPosition.right) > aMin && Math.abs(oPositions[idx].vCenter - cPosition.right) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "vCenter", "right", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].right - cPosition.right) > aMin && Math.abs(oPositions[idx].right - cPosition.right) <= aLMin) {
+                  createVerLine(oPositions[idx], cPosition, "right", "right", paperH, paperContent);
+                } else if (Math.abs(oPositions[idx].top - cPosition.top) > aMin && Math.abs(oPositions[idx].top - cPosition.top) <= aLMin) { // 上
+                  createHorLine(oPositions[idx], cPosition, "top", "top", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].hCenter - cPosition.top) > aMin && Math.abs(oPositions[idx].hCenter - cPosition.top) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "hCenter", "top", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].bottom - cPosition.top) > aMin && Math.abs(oPositions[idx].bottom - cPosition.top) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "bottom", "top", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].top - cPosition.hCenter) > aMin && Math.abs(oPositions[idx].top - cPosition.hCenter) <= aLMin) { // 中
+                  createHorLine(oPositions[idx], cPosition, "top", "hCenter", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].hCenter - cPosition.hCenter) > aMin && Math.abs(oPositions[idx].hCenter - cPosition.hCenter) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "hCenter", "hCenter", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].bottom - cPosition.hCenter) > aMin && Math.abs(oPositions[idx].bottom - cPosition.hCenter) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "bottom", "hCenter", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].top - cPosition.bottom) > aMin && Math.abs(oPositions[idx].top - cPosition.bottom) <= aLMin) { // 下
+                  createHorLine(oPositions[idx], cPosition, "top", "bottom", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].hCenter - cPosition.bottom) > aMin && Math.abs(oPositions[idx].hCenter - cPosition.bottom) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "hCenter", "bottom", paperW, paperContent);
+                } else if (Math.abs(oPositions[idx].bottom - cPosition.bottom) > aMin && Math.abs(oPositions[idx].bottom - cPosition.bottom) <= aLMin) {
+                  createHorLine(oPositions[idx], cPosition, "bottom", "bottom", paperW, paperContent);
+                } else {
+                  removeVerLine(oPositions[idx]);
+                  removeHorLine(oPositions[idx]);
+                }
+              }
+            })
           })()
           i.data.left = window.hinnn.pt.toPx(cPosition.left);
           i.data.top = window.hinnn.pt.toPx(cPosition.top);
@@ -6309,6 +7078,7 @@ var hiprint = function (t) {
     function r(e) {
       // 这里原 mouseup时, 回调了 o(e) ==> onDrag
       t.fn.hidraggable.isDragging = !1;
+      removeVerLine(), removeHorLine();
       var n,
         i,
         r = t.data(e.data.target, "hidraggable"),
@@ -6428,6 +7198,19 @@ var hiprint = function (t) {
                 target: e.data.target,
                 parent: t(e.data.target).parent()[0]
               };
+            var ops = t.data(e.data.target, "hidraggable");
+            // item禁止移动
+            if (ops.options.draggable === false) {
+              return;
+            }
+            // 旋转时不允许移动
+            if ('r resizebtn' == e.target.className) {
+              return;
+            }
+            var ptr = ops.options.getScale()
+            if (ptr) {
+              p.left /= ptr, p.top /= ptr, p.startLeft /= ptr, p.startTop /= ptr;
+            }
             var tr = p.target.style.transform && parseInt(p.target.style.transform.slice(7, -1));
             if (tr) {
               var rad = tr * Math.PI / 180,
@@ -6440,20 +7223,7 @@ var hiprint = function (t) {
               var diffW = (w - width) / 2, diffH = (h - height) / 2;
               p.left += diffW, p.top += diffH, p.startLeft += diffW, p.startTop += diffH;
             }
-            var ops = t.data(e.data.target, "hidraggable");
-            var ptr = ops.options.getScale()
-            if (ptr) {
-              p.left /= ptr, p.top /= ptr, p.startLeft /= ptr, p.startTop /= ptr;
-            }
             t.extend(e.data, p);
-            // item禁止移动
-            if (ops.options.draggable === false) {
-              return;
-            }
-            // 旋转时不允许移动
-            if ('r resizebtn' == e.target.className) {
-              return;
-            }
             0 != t.data(e.data.target, "hidraggable").options.onBeforeDrag.call(e.data.target, e) && (t(document).bind("mousedown.hidraggable", e.data, i), t(document).bind("mousemove.hidraggable", e.data, o), t(document).bind("mouseup.hidraggable", e.data, r));
           }
         });
@@ -6675,6 +7445,7 @@ var hiprint = function (t) {
             target: n('<div class="r resizebtn" style="cursor:url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABvUExURUdwTP///9XV1R0dHf///3Nzc////////////////1ZWVq+vr/T09PX19QQEBP///////8XFxf///////////wYGBv///+jo6P///4aGhqioqMzMzP///2BgYP///////////zExMf///wAAAP///xLps0AAAAAjdFJOUwCxxOdixRDmzSDMv8/Z+tz5wWpXWPk3zALCv8KnyXZVMNuNPnv3CwAAAJ1JREFUKM/NkckOwyAMRFkDBMhC9qWr+//fWCIV1WlzrjoXS36yxmMT8hdqqKoUvRAjMtw22kvecem1GjTuK1vApmI+wQMBbQFy5li+QQRaX4AtRX+vbntAJeRl9HTTx4TiwESs61DXNUPmVQeujzVrQwh43TTxpeRBslVfMUhbiXKWyiAwvnIsMcdyJkfJYdpNvG/ltDm+bjP+8KFP8ggL+zQLGxwAAAAASUVORK5CYII=\') 14 14,alias;top: -16px;margin-left: -4px;left: 50%;"></div>')
           },
           sizeBox = n('<div class="size-box" style="position: absolute;left:-2px;"></div>'),
+          deleteBtn = n('<div class="del-btn">✕</div>'),
           h = function h() {
             var t = [],
               i = e.options.showPoints;
@@ -6683,6 +7454,14 @@ var hiprint = function (t) {
             }), t;
           };
         e.refreshSizeBox(void 0, sizeBox, o);
+        // draggable 为 false 时不显示 resizebox 右上角删除按钮
+        if (e.options.draggable != false) {
+          o.append(deleteBtn);
+          o.on("mousedown", ".del-btn", () => {
+            var keyboardEvent = new KeyboardEvent("keydown", { bubbles: true, keyCode: 46 });
+            t.dispatchEvent(keyboardEvent);
+          });
+		    }
         e.addHandlerCss(h()), e.appendHandler(h(), o), e.bindResizeEvent(o, n(this));
         var f = n(this);
         n(o).on("mousedown", ".resizebtn", function () {
@@ -6713,24 +7492,37 @@ var hiprint = function (t) {
       if (!this.options.showSizeBox) return;
       if (box) {
         o.append(box);
-      } else {
-        if (t && t.length) {
-          var style = t[0].style;
-          var sizeBox = t.children("div[panelindex]").find(".size-box");
-          if (sizeBox) {
-            sizeBox.text(style.width + ' x ' + style.height);
-            sizeBox.css('top', -(sizeBox.outerHeight()));
-          }
+      }
+      var style, sizeBox;
+      if (t && t.length) {
+        style = t[0].style;
+        sizeBox = t.children("div[panelindex]").find(".size-box");
+      } else if (o && o.parent()) {
+        var t = o.parent();
+        if (t.hasClass("hiprint-printPaper-content")) return;
+        style = t[0].style;
+        if (!style.width) {
+          style.width = hinnn.px.toPt(t[0].offsetWidth) + "pt";
         }
+        if (!style.height) {
+          style.height = hinnn.px.toPt(t[0].offsetHeight) + "pt";
+        }
+        sizeBox = t.children("div[panelindex]").find(".size-box");
+      }
+      if (sizeBox) {
+        sizeBox.text(style.width + ' x ' + style.height);
+        sizeBox.css('top', -(sizeBox.outerHeight() || 20));
       }
     },
     triggerResize: function triggerResize(t, n) {
       // 处理按住 ctrl / command 点击元素 多选
       if (!(n.ctrlKey || n.metaKey)) {
+        t.siblings().children("div[panelindex]").removeClass('selected')
         t.siblings().children("div[panelindex]").css({
           display: "none"
         })
       }
+      t.children("div[panelindex]").addClass('selected')
       t.children("div[panelindex]").css({
         display: "block"
       });
@@ -6858,7 +7650,6 @@ var hiprint = function (t) {
             // 宽高比
             var ratio = p / a;
             var width = a + n, height = p + E;
-            console.log('ratio', ratio)
             height = width * ratio;
             u.css({width: i.numHandlerText(width), height: i.numHandlerText(height)});
             i.options.onResize(e, i.numHandler(height), i.numHandler(width), void 0, void 0);
@@ -6903,6 +7694,7 @@ var hiprint = function (t) {
             t.stopPropagation(), n("div[panelindex]").css({
               display: "none"
             });
+            n("div[panelindex]").removeClass("selected");
           }
         });
       }
@@ -6945,6 +7737,7 @@ var hiprint = function (t) {
     opened: !1,
     name: "webSockets",
     host: "http://localhost:17521",
+    token: 'vue-plugin-hiprint',
     reconnectTimeout: 6e4,
     reconnectWindowSetTimeout: null,
     reconnectDelay: 2e3,
@@ -6961,6 +7754,39 @@ var hiprint = function (t) {
         console.log("send data error:" + (t || "") + JSON.stringify(e));
       }
     },
+    sendByFragments: function(content) {
+      try {
+        const {
+          fragmentSize =  50000, // 单片字符长度
+          sendInterval = 10,  // 分批传输间隔
+          html,
+          generateHTMLInterval, // 不需要传给client,取出字段
+          printByFragments, // 不需要传给client,取出字段
+          ...otherFields
+        } = content
+        const contentToSplit = content.html
+        // 字符总数
+        const charsCount = contentToSplit.length
+        // 片段总数
+        const fragmentsCount = Math.ceil(charsCount / fragmentSize)
+        Array.apply(undefined, { length: fragmentsCount }).forEach((item, index) => {
+          const startIndex = index * fragmentSize
+          // 字符结束索引
+          const endIndex = index + 1 === fragmentSize ? charsCount : (index + 1) * fragmentSize
+          // socket分段发送内容
+          setTimeout(() => {
+            this.socket.emit('printByFragments', {
+              ...otherFields,
+              index,
+              total: fragmentsCount,
+              htmlFragment: html.slice(startIndex, endIndex)
+            });
+          }, sendInterval * index);
+        })
+      } catch (e) {
+        console.log("send data fragment error:" + (content || "") + JSON.stringify(e));
+      }
+    },
     getPrinterList: function getPrinterList() {
       return this.printerList;
     },
@@ -6969,6 +7795,28 @@ var hiprint = function (t) {
         this.socket.emit("refreshPrinterList");
       } catch (e) {
         console.log("refreshPrinterList error:" + JSON.stringify(e));
+      }
+    },
+    getPaperSizeInfo: function getPaperSizeInfo(printer) {
+      try {
+        console.warn("getPaperSizeInfo 是一个测试功能，仅win客户端支持该api！")
+        this.socket.emit("getPaperSizeInfo", printer);
+      } catch (e) {
+        console.log("getPaperSizeInfo error:" + JSON.stringify(e))
+      }
+    },
+    getClients: function getClients() {
+      try {
+        this.socket.emit("getClients");
+      } catch (e) {
+        console.log("getClients error:" + JSON.stringify(e));
+      }
+    },
+    getClientInfo: function getClientInfo() {
+      try {
+        this.socket.emit("getClientInfo");
+      } catch (e) {
+        console.log("getClientInfo error:" + JSON.stringify(e))
       }
     },
     getAddress: function getAddress(type, ...args) {
@@ -6992,25 +7840,44 @@ var hiprint = function (t) {
         console.log("ippRequest error:" + JSON.stringify(e));
       }
     },
-    setHost: function (host) {
+    setHost: function (host, token, cb) {
+      if (typeof token === "function") {
+        cb = token
+        token = undefined
+      }
       this.host = host
+      this.token = token
       this.stop()
-      this.start()
+      this.start(cb)
     },
     start: function start(cb) {
       var _this = this;
 
       var t = this;
       window.WebSocket ? this.socket || (this.socket = window.io(this.host, {
-        reconnectionAttempts: 5
+        transports: ['websocket'],
+        reconnectionAttempts: 5,
+        auth: {
+          token: this.token
+        }
       }), this.socket.on("connect", function (e) {
-        t.opened = !0, console.log("Websocket opened."), _this.socket.on("successs", function (t) {
+        t.opened = !0, console.log("Websocket opened."),
+        _this.socket.on("success", function (t) {
           hinnn.event.trigger("printSuccess_" + t.templateId, t);
         }), _this.socket.on("error", function (t) {
           hinnn.event.trigger("printError_" + t.templateId, t);
+        }), _this.socket.on("clients", function(clients) {
+          t.clients = clients;
+          hinnn.event.trigger("clients", clients)
+        }), _this.socket.on("clientInfo", function(clientInfo) {
+          t.clientInfo = clientInfo
+          hinnn.event.trigger("clientInfo", clientInfo)
         }), _this.socket.on("printerList", function (e) {
           t.printerList = e;
           hinnn.event.trigger("printerList", e);
+        }), _this.socket.on("paperSizeInfo", function(e) {
+          t.paperSize = Array.isArray(e)?e:[e]
+          hinnn.event.trigger("paperSizeInfo", t.paperSize);
         }), _this.socket.on("address", function (type, addr, e) {
           hinnn.event.trigger("address_" + type, {'addr': addr, 'e': e});
         }), _this.socket.on("ippPrinterConnected", function (printer) {
@@ -7021,6 +7888,9 @@ var hiprint = function (t) {
           hinnn.event.trigger("ippRequestCallback", {'err': err, 'res': res});
         }), t.state = n;
         cb && cb(true, e);
+      }), this.socket.on("connect_error", function (e) {
+        console.error(e)
+        hinnn.event.trigger("connect_error", e)
       }), this.socket.on("disconnect", function () {
         t.opened = !1;
         cb && cb(false);
@@ -7430,7 +8300,7 @@ var hiprint = function (t) {
         if (c) {
           var newType = c(type);
           var idx = this.allElementTypes.findIndex(function (e) {
-            return e.tid = t;
+            return e.tid == t;
           })
           if (idx >= 0) {
             this.allElementTypes.splice(idx, 1, newType);
@@ -7478,7 +8348,7 @@ var hiprint = function (t) {
         var e = this;
         this.text = t.text, this.field = t.field, this.fields = t.fields, this.title = t.title, this.tid = t.tid, this.data = t.data, this.styler = t.styler, this.formatter = t.formatter, this.type = t.type, this.options = t.options, this.editable = t.editable != void 0 ? t.editable : !0, this.columnDisplayEditable = t.columnDisplayEditable != void 0 ? t.columnDisplayEditable : !0, this.columnDisplayIndexEditable = t.columnDisplayIndexEditable != void 0 ? t.columnDisplayIndexEditable : !0, this.columnTitleEditable = t.columnTitleEditable != void 0 ? t.columnTitleEditable : !0, this.columnResizable = t.columnResizable != void 0 ? t.columnResizable : !0, this.columnAlignEditable = t.columnAlignEditable != void 0 ? t.columnAlignEditable : !0, this.columns = [], (t.columns || []).forEach(function (t, n) {
           e.columns.push(e.createTableColumnArray(t));
-        }), this.rowStyler = t.rowStyler, this.striped = t.striped, this.groupFields = t.groupFields || [], this.groupFormatter = t.groupFormatter, this.groupFooterFormatter = t.groupFooterFormatter, this.footerFormatter = t.footerFormatter, this.rowsColumnsMerge = t.rowsColumnsMerge, this.gridColumnsFooterFormatter = t.gridColumnsFooterFormatter,
+        }), this.rowStyler = t.rowStyler, this.striped = t.striped, this.groupFields = t.groupFields || [], this.groupFormatter = t.groupFormatter, this.groupFooterFormatter = t.groupFooterFormatter, this.footerFormatter = t.footerFormatter, this.rowsColumnsMerge = t.rowsColumnsMerge, this.rowsColumnsMergeClean = t.rowsColumnsMergeClean, this.groupSequenceContinue = t.groupSequenceContinue, this.gridColumnsFooterFormatter = t.gridColumnsFooterFormatter,
           this.isEnableEditField = t.isEnableEditField != void 0 ? t.isEnableEditField : !0, this.isEnableContextMenu = t.isEnableContextMenu != void 0 ? t.isEnableContextMenu : !0, this.isEnableInsertRow = t.isEnableInsertRow != void 0 ? t.isEnableInsertRow : !0, this.isEnableDeleteRow = t.isEnableDeleteRow != void 0 ? t.isEnableDeleteRow : !0, this.isEnableInsertColumn = t.isEnableInsertColumn != void 0 ? t.isEnableInsertColumn : !0, this.isEnableDeleteColumn = t.isEnableDeleteColumn != void 0 ? t.isEnableDeleteColumn : !0, this.isEnableMergeCell = t.isEnableMergeCell != void 0 ? t.isEnableMergeCell : !0, this.columnObj = this.makeColumnObj();
       }
 
@@ -7563,7 +8433,7 @@ var hiprint = function (t) {
       }
 
       return m(e, t), e.prototype.getReizeableShowPoints = function () {
-        return ["se", "r"];
+        return ["s","e","se","r"];
       }, e.prototype.getData = function (t) {
         var e = "", f = this.getField();
         t ? e = f ? f.split('.').reduce((a, c) => a ? a[c] : t[c], !1) || "" : this.options.src || this.printElementType.getData() : e = this.options.src || this.printElementType.getData();
@@ -7584,6 +8454,7 @@ var hiprint = function (t) {
         if (n.length) i.find("img").css('cssText', `width:100%;height:100%;content:url("${n}")!important`)
         else i.find("img").css('cssText', 'width:100%;height:100%;')
         if (this.options.fit) i.find("img").css("object-fit", this.options.fit);
+        if (this.options.borderRadius) i.find("img").css("border-radius", this.options.borderRadius);
       }, e.prototype.getHtml = function (t, e, n) {
         return this.getHtml2(t, e, n);
       }, e;
@@ -7621,9 +8492,9 @@ var hiprint = function (t) {
     }(g.a),
     E = n(8),
     T = function () {
-      function t(t, pr, scl, e, n, i, r, a, p, s, l, u, d) {
-        this.panelPageRule = pr, this.scale = scl,
-          this.defaultPaperNumberFormat = "paperNo-paperCount", this.printLine = 0, this.templateId = t, this.width = o.a.mm.toPt(e), this.height = o.a.mm.toPt(n), this.mmwidth = e, this.mmheight = n, this.paperHeader = i >= 0 ? i : 0, this.paperFooter = r, this.contentHeight = r - i, this.createTarget(), this.index = u, this.paperNumberLeft = a || parseInt((this.width - 30).toString()), this.paperNumberTop = p || parseInt((this.height - 22).toString()), this.paperNumberDisabled = s, this.paperNumberFormat = l, this.referenceElement = d ? $.extend({}, d) : new E.a({
+      function t(t, idx, watermarkOptions, pr, scl, e, n, i, r, a, p, s, s1, l, u, d) {
+        this.panelPageRule = pr, this.scale = scl, this.watermarkOptions = watermarkOptions,
+          this.defaultPaperNumberFormat = "${paperNo}-${paperCount}", this.printLine = 0, this.templateId = t, this.panelIdx = idx, this.width = o.a.mm.toPt(e), this.height = o.a.mm.toPt(n), this.mmwidth = e, this.mmheight = n, this.paperHeader = i >= 0 ? i : 0, this.paperFooter = r, this.contentHeight = r - i, this.createTarget(), this.index = u, this.paperNumberLeft = a || parseInt((this.width - 30).toString()), this.paperNumberTop = p || parseInt((this.height - 22).toString()), this.paperNumberDisabled = s, this.paperNumberContinue = s1, this.paperNumberFormat = l, this.referenceElement = d ? $.extend({}, d) : new E.a({
           top: 0,
           left: 0,
           height: 0,
@@ -7646,6 +8517,7 @@ var hiprint = function (t) {
           paperNumberLeft: this.paperNumberLeft,
           paperNumberTop: this.paperNumberTop,
           paperNumberDisabled: this.paperNumberDisabled,
+          paperNumberContinue: this.paperNumberContinue,
           paperNumberFormat: this.paperNumberFormat
         });
         o.a.event.trigger("hiprintTemplateDataChanged_" + this.templateId, t || "模板调整");
@@ -7693,16 +8565,17 @@ var hiprint = function (t) {
         t >= this.printLine && (this.printLine = t);
       }, t.prototype.design = function (t) {
         var e = this;
-        this.createHeaderLine(), this.createFooterLine(), this.target.addClass("design"), this.paperNumberTarget = this.createPaperNumber(this.formatPaperNumber(1, 1), true), this.createRuler(), this.resetPaperNumber(this.paperNumberTarget), $(this.paperNumberTarget).bind("dblclick.hiprint", function () {
+        this.createHeaderLine(), this.createFooterLine(), this.target.addClass("design"), t && t.grid && this.target.addClass("grid"), this.paperNumberTarget = this.createPaperNumber(this.formatPaperNumber(1, 1), true), this.createRuler(), this.createWaterMark(true, this.panelIdx, this.watermarkOptions), this.resetPaperNumber(this.paperNumberTarget), $(this.paperNumberTarget).bind("dblclick.hiprint", function () {
           null == e.paperNumberDisabled && (e.paperNumberDisabled = !1), e.paperNumberDisabled = !e.paperNumberDisabled, e.resetPaperNumber(e.paperNumberTarget), e.triggerOnPaperBaseInfoChanged("初始");
         }), $(this.paperNumberTarget).bind("click.hiprint", function () {
           o.a.event.trigger("BuildCustomOptionSettingEventKey_" + e.templateId, {
             options: {
               paperNumberFormat: e.paperNumberFormat,
-              paperNumberDisabled: e.paperNumberDisabled
+              paperNumberDisabled: e.paperNumberDisabled,
+              paperNumberContinue: e.paperNumberContinue
             },
             callback: function callback(t) {
-              e.paperNumberDisabled = !!t.paperNumberDisabled || void 0, e.paperNumberFormat = t.paperNumberFormat ? t.paperNumberFormat : void 0, e.createPaperNumber(e.formatPaperNumber(1, 1), true), e.resetPaperNumber(e.paperNumberTarget), e.triggerOnPaperBaseInfoChanged();
+              e.paperNumberDisabled = !!t.paperNumberDisabled || void 0, e.paperNumberContinue = t.paperNumberContinue, e.paperNumberFormat = t.paperNumberFormat ? t.paperNumberFormat : void 0, e.createPaperNumber(e.formatPaperNumber(1, 1), true), e.resetPaperNumber(e.paperNumberTarget), e.triggerOnPaperBaseInfoChanged();
             }
           });
         });
@@ -7712,7 +8585,8 @@ var hiprint = function (t) {
         var i = this.createPaperNumber(this.formatPaperNumber(t, e));
         this.paperNumberDisabled ? i.hide() : n && this.index % 2 == 1 && (i[0].style.left = "", i.css("right", this.paperNumberLeft + "pt"));
       }, t.prototype.formatPaperNumber = function (t, e) {
-        return (this.paperNumberFormat ? this.paperNumberFormat : this.defaultPaperNumberFormat).replace("paperNo", t.toString()).replace("paperCount", e.toString());
+        this.createWaterMark(false, t, this.watermarkOptions);
+        return eval("`" + (this.paperNumberFormat ? this.paperNumberFormat : this.defaultPaperNumberFormat).replace("paperNo",t).replace("paperCount",e) + "`");
       }, t.prototype.dragHeadLineOrFootLine = function (t, e, n) {
         var i = this;
         t.hidraggable({
@@ -7735,9 +8609,11 @@ var hiprint = function (t) {
           }
         });
       }, t.prototype.resize = function (t, e) {
+        // 获取页脚高度比例
+        var parperFooterRatio = this.paperFooter / this.height;
         this.width = o.a.mm.toPt(t), this.height = o.a.mm.toPt(e), this.mmwidth = t, this.mmheight = e, this.target.css("width", t + "mm"), this.target.css("height", e - p.a.instance.paperHeightTrim + "mm"), this.target.attr("original-height", this.mmheight);
-        // 设置纸张后, 页脚线重置问题
-        var paperFooter = this.paperFooter > this.height ? this.height : this.paperFooter;
+        // 按比例计算页脚高度
+        var paperFooter = this.height * parperFooterRatio;
         this.paperFooter = paperFooter || this.height, this.footerLinetarget.css("top", paperFooter + "pt"),
           this.contentHeight = this.paperFooter - this.paperHeader,
           // 设置纸张后, 页码位置重置问题
@@ -7763,6 +8639,24 @@ var hiprint = function (t) {
         return this.getPaperFooter(t) - this.paperHeader;
       }, t.prototype.createRuler = function () {
         this.target.append('<div class="hiprint_rul_wrapper">\n                     <img class="h_img" src="' + lImg + '" />\n                     <img class="v_img" src="' + vImg + '" />\n                    </div>');
+      }, t.prototype.createWaterMark = function (watch, idx, opts) {
+        var e = this;
+        var options = Object.assign({}, opts || {}, {
+          id: `${e.templateId}_${e.panelIdx}_${idx || 1}_${watch ? 'design' : e.index}`,
+          watch: watch,
+          container: e.target[0],
+        });
+        if (!options.container) return;
+        if (options.content) {
+          if (watch) {
+            watermark.destroyWatermark(Object.assign({}, options, {
+              id: `${e.templateId}_${e.panelIdx}_${idx || 1}_${e.index}`,
+            }));
+          }
+          watermark.createWatermark(options);
+        } else {
+          watermark.destroyWatermark(options);
+        }
       }, t.prototype.displayHeight = function () {
         return this.mmheight - p.a.instance.paperHeightTrim + "mm";
       }, t.prototype.displayWidth = function () {
@@ -7838,7 +8732,7 @@ var hiprint = function (t) {
         return this.removeTempContainer(), n;
       }, e.prototype.getHeightByData = function (t) {
         this.createTempContainer();
-        var e = this.getPaperHtmlResult(new T("", "", void 0, 1e3, 1e3, 0, 25e3, 0, 0, !0, void 0, 0, void 0), {}, t);
+        var e = this.getPaperHtmlResult(new T("", "", void 0, 1e3, 1e3, 0, 25e3, 0, 0, !0, !0, void 0, 0, void 0), {}, t);
         return this.removeTempContainer(), e[0].referenceElement.bottomInLastPaper - e[0].referenceElement.printTopInPaper;
       }, e.prototype.getLongTextIndent = function () {
         return this.options.longTextIndent ? '<span class="long-text-indent" style="margin-left:' + this.options.longTextIndent + 'pt"></span>' : '<span class="long-text-indent"></span>';
@@ -8001,6 +8895,13 @@ var hiprint = function (t) {
         return (null == this.fontSize ? this.defaultOptions.fontSize : this.fontSize) || 9;
       }, e.prototype.getbarcodeMode = function () {
         return (null == this.barcodeMode ? this.defaultOptions.barcodeMode : this.barcodeMode) || "CODE128";
+      }, e.prototype.getBarTextMode = function () {
+        return (null == this.barTextMode ? this.defaultOptions.barTextMode : this.barTextMode) || 'text';
+      }, e.prototype.getBarWidth = function () {
+        return (null == this.barWidth ? this.defaultOptions.barWidth : this.barWidth) || 1;
+      }, e.prototype.getBarAutoWidth = function () {
+        // 该属性 "true" 为 true，其余一概为 false
+        return (null == this.barAutoWidth ? this.defaultOptions.barAutoWidth === "true" : this.barAutoWidth === "true") ?? true;
       }, e.prototype.getQRcodeLevel = function () {
         return (null == this.qrCodeLevel ? this.defaultOptions.qrCodeLevel : this.qrCodeLevel) || 0;
       }, e;
@@ -8040,6 +8941,16 @@ var hiprint = function (t) {
           n = this.createTarget(this.printElementType.getText(!0), e);
         return this.updateTargetSize(n), this.css(n, e), n;
       }, e.prototype.updateDesignViewFromOptions = function () {
+        // ! pub-beta 0.0.57-beta22 这里的处理似乎重复了，影响了 updateTargetText 方法执行，故在此处注释掉
+        // var els = this.panel.printElements.filter(function (t) {
+        //   return ('block' == t.designTarget.children().last().css('display')
+        //     && t.designTarget.children().last().hasClass('selected')) && !t.printElementType.type.includes('table');
+        // });
+        // els.forEach(ele => {
+        //   var t = ele.getData()
+        //   ele.css(ele.designTarget, t)
+        //   this.updateTargetText(ele.designTarget, ele.getTitle(), t)
+        // })
         if (this.designTarget) {
           var t = this.getData();
           this.css(this.designTarget, t), this.updateTargetText(this.designTarget, this.getTitle(), t);
@@ -8060,7 +8971,6 @@ var hiprint = function (t) {
             if (n.length > 0) return !0 === e || "true" === e ? n[0] : n[1];
           }
         }
-
         return e;
       }, e.prototype.updateTargetText = function (t, e, n, i, rowIndex) {
         var r = this.getFormatter(),
@@ -8070,20 +8980,37 @@ var hiprint = function (t) {
         var s = this.options.getTextType();
         if ("text" == s) a.html(p); else {
           if ("barcode" == s) {
-            a.html('<svg width="100%" display="block" height="100%" class="hibarcode_imgcode" preserveAspectRatio="none slice"></svg ><div class="hibarcode_displayValue"></div>');
-
+            a.css({
+              "display": "flex",
+              "flex-direction": "column"
+            })
+            // 分离显示条形码文本
+            var divMode = this.options.getBarTextMode() == 'text';
+            // pub-beta 0.0.57-beta22 移除插件通过 div 添加的文本元素，默认使用 JsBarcode 生成条形码文本
+            a.html('<svg width="100%" display="block" height="100%" class="hibarcode_imgcode" preserveAspectRatio="none slice"></svg>');
+            if (divMode) {
+              a.append(`<div class="hibarcode_displayValue" style="white-space:nowrap">`);
+            }
             try {
               n ? (JsBarcode(a.find(".hibarcode_imgcode")[0], n, {
                 format: this.options.getbarcodeMode(),
-                width: 1,
+                width: this.options.getBarWidth(),
                 textMargin: -1,
                 lineColor: this.options.color || "#000000",
                 margin: 0,
                 height: parseInt(o.a.pt.toPx(this.options.getHeight() || 10).toString()),
-                displayValue: !1
-              }), a.find(".hibarcode_imgcode").attr("height", "100%"), a.find(".hibarcode_imgcode").attr("width", "100%"), this.options.hideTitle || a.find(".hibarcode_displayValue").html(n)) : a.html("");
+                displayValue: divMode ? false : !this.options.hideTitle,
+              }), a.find(".hibarcode_imgcode").attr("height", "100%"), a.find(".hibarcode_imgcode").attr("width", "100%"),
+              divMode && (this.options.hideTitle || a.find(".hibarcode_displayValue").html(n))): a.html("");
+              // pub-beta 0.0.57-beta22 解决条形码自动宽度问题
+              let svgWidth = a.find(".hibarcode_imgcode rect")[0].attributes.width.value
+              svgWidth = Math.ceil(hinnn.px.toPt(svgWidth * 1.05));
+              if (this.options.getBarAutoWidth() && svgWidth > this.options.width) {
+                a.parent().css("width", svgWidth + 'pt')
+                this.options.width = svgWidth;
+              }
             } catch (t) {
-              console.log(t), a.html("此格式不支持该文本");
+              console.log(t), a.html(`${i18n.__('此格式不支持该文本')}`);
             }
           }
 
@@ -8092,18 +9019,16 @@ var hiprint = function (t) {
 
             try {
               if (n) {
-                //去除行高对高度的影响
-                t.css('line-height', 0)
-                //默认二维码永远居中
-                a.css('text-align', 'center')
-                // var l = parseInt(o.a.pt.toPx(this.options.getWidth() || 20)),
-                // 	u = parseInt(o.a.pt.toPx(this.options.getHeight() || 20)),
-                var lpt = this.options.getWidth() || 20,
-                  upt = this.options.getHeight() || 20
-                var box = $('<div></div>').css({
-                  "width": (lpt > upt ? upt : lpt) + 'pt',
-                  "height": (lpt > upt ? upt : lpt) + 'pt',
-                  'display': 'inline-block'
+                a.css({
+                  "display": "flex",
+                  "flex-direction": "column"
+                })
+                var width = this.options.width
+                var height = this.options.height - (!this.options.hideTitle ? this.options.lineHeight ?? (this.options.fontSize ?? 10.5) * 1.5 : 0)
+                var box = $('<div class="hiqrcode_imgcode"></div>').css({
+                  "width": Math.min(width, height) + 'pt',
+                  "height": Math.min(width, height) + 'pt',
+                  "margin": "auto"
                 })
                 new QRCode(box[0], {
                   width: "100%",
@@ -8112,10 +9037,10 @@ var hiprint = function (t) {
                   useSVG: !0,
                   correctLevel: this.options.getQRcodeLevel()
                 }).makeCode(n);
-                a.html(box)
+                a.html(box), !this.options.hideTitle && a.append(`<div class="hiqrcode_displayValue" style="white-space:nowrap">${n}</div>`);
               }
             } catch (t) {
-              console.log(t), a.html("二维码生成失败");
+              console.log(t), a.html(`${i18n.__('二维码生成失败')}`);
             }
           }
         }
@@ -8374,12 +9299,155 @@ var hiprint = function (t) {
         return this.getHtml2(t, e, n);
       }, e;
     }(f.a),
+    barcode = function(t) {
+      function e(e, n) {
+        var i = t.call(this, e) || this;
+        return i.options = new g.a(n), i.options.setDefault(new g.a(p.a.instance.barcode.default).getPrintElementOptionEntity()), i;
+      }
+      return N(e, t), e.prototype.updateDesignViewFromOptions = function () {
+        if (this.designTarget) {
+          var t = this.getData();
+          this.css(this.designTarget, t), this.initBarcode(this.designTarget, this.getTitle(), this.getData());
+        }
+      }, e.prototype.getConfigOptions = function () {
+        return p.a.instance.barcode;
+      }, e.prototype.getBarAutoWidth = function () {
+        return (null == this.options.barAutoWidth ? this.options.defaultOptions.barAutoWidth === "true" : this.options.barAutoWidth === "true") ?? true;
+      }, e.prototype.onResize = function (e, n, i, o, r) {
+        t.prototype.onResize.call(this, e, n, i, o, r);
+        this.initBarcode(this.designTarget, this.getTitle(), this.getData())
+      }, e.prototype.getTitle = function () {
+        return this.options.title || this.printElementType.title;
+      }, e.prototype.getData = function (t) {
+        var e = void 0;
+        var f = this.getField();
+        e = t ? f ? f.split('.').reduce((a, c) => a ? a[c] : t ? t[c] : "", !1) || "" : "" : this.options.testData || this.printElementType.getData() || ""
+        return e;
+      }, e.prototype.initBarcode = function (designTarget, title, text) {
+        designTarget = designTarget || this.designTarget
+        var content = designTarget.find('.hiprint-printElement-barcode-content')
+        try {
+          // 计算 barcode 的高度，判断是否需要减去 title，使 title 包含在元素内部
+          const height = o.a.pt.toMm(this.options.height - (!this.options.hideTitle ? this.options.lineHeight ?? (this.options.fontSize ?? 10.5) * 1.5 :0));
+          var barcode = bwipjs.toSVG({
+            bcid: this.options.barcodeType || 'code128',
+            text: text || this.options.testData || this.options.title,
+            scale: this.options.barWidth || 1,
+            width: !this.getBarAutoWidth() ? parseInt(o.a.pt.toMm(this.options.getWidth())) : '',
+            height: parseInt(height),
+            includetext: !this.options.hideTitle,
+            barcolor: this.options.barColor || "#000",
+          })
+          // pub-beta 0.0.57-beta22 优化了条码自动调整宽度的逻辑，title 文本改为使用 bwipjs 文本内部实现
+          barcode = $(barcode)
+          // pub-beta 0.0.57-beta22 svg 元素需要添加 preserveAspectRatio 属性，使其横向可以自适应缩放
+          barcode.attr("preserveAspectRatio", "none slice")
+          let svgWidth = barcode[0].attributes.viewBox.value.split(" ")[2]; // 通过 viewBox 属性获取 bwipjs 内部生成的 svg 宽度
+          svgWidth = Math.ceil(hinnn.px.toPt(svgWidth * 1.05));
+          if (this.getBarAutoWidth() && svgWidth > this.options.width) {
+            content.parent().css("width", svgWidth + 'pt')
+            barcode.css("height", "100%");
+            this.options.width = svgWidth;
+          }
+          content.html(barcode)
+          // if (!this.options.hideTitle) {
+          //   const titleText = title ? title + ( text ? ':' : '' ) : '';
+          //   const textAlign = this.options.textAlign || 'center';
+          //   // 支持type为barcode的textAlign属性
+          //   const textStyle = textAlign === 'justify' ? 'text-align-last: justify;text-justify: distribute-all-lines;' : `text-align: ${ textAlign };`
+          //   content.append($(`<div class="hiprint-printElement-barcode-content-title" style="${ textStyle }">${ titleText }${ text }</div>`))
+          // }
+        } catch (error) {
+          console.error(error)
+          content.html($(`<div>${i18n.__('条形码生成失败')}</div>`))
+        }
+      },
+      // 设置 barcode 元素 resize 控制点
+      e.prototype.getReizeableShowPoints = function () {
+        return ['s', 'e', 'se', 'r'];
+      }, e.prototype.createTarget = function (title, data) {
+        var designTarget = $('<div class="hiprint-printElement hiprint-printElement-barcode" style="position: absolute;"><div class="hiprint-printElement-barcode-content" style="height:100%;width:100%;display:flex;flex-direction:column"></div></div>');
+        this.initBarcode(designTarget, title, data);
+        return designTarget;
+      }, e.prototype.getHtml = function (t, e, n) {
+        return this.getHtml2(t, e, n)
+      }, e;
+    }(f.a),
+    qrcode = function(t) {
+      function e(e, n) {
+        var i = t.call(this, e) || this;
+        return i.options = new g.a(n), i.options.setDefault(new g.a(p.a.instance.qrcode.default).getPrintElementOptionEntity()), i;
+      }
+      return N(e, t), e.prototype.updateDesignViewFromOptions = function () {
+        if (this.designTarget) {
+          var t = this.getData();
+          this.css(this.designTarget, t), this.initQrcode(this.designTarget, this.getTitle(), this.getData());
+        }
+      }, e.prototype.getConfigOptions = function () {
+        return p.a.instance.qrcode;
+      }, e.prototype.onResize = function (e, n, i, o, r) {
+        t.prototype.onResize.call(this, e, n, i, o, r);
+        this.initQrcode(this.designTarget, this.getTitle(), this.getData())
+      }, e.prototype.getTitle = function () {
+        return this.options.title || this.printElementType.title;
+      }, e.prototype.getData = function (t) {
+        var e = void 0;
+        var f = this.getField();
+        e = t ? f ? f.split('.').reduce((a, c) => a ? a[c] : t ? t[c] : "", !1) || "" : "" : this.options.testData || this.printElementType.getData() || ""
+        return e;
+      }, e.prototype.initQrcode = function (designTarget, title, text) {
+        designTarget = designTarget || this.designTarget
+        var content = designTarget.find('.hiprint-printElement-qrcode-content')
+        try {
+          const width = o.a.pt.toPx(this.options.getWidth());
+          // 计算 qrcode 的高度，判断是否需要减去 title，使 title 包含在元素内部
+          const height = o.a.pt.toPx(this.options.height - (!this.options.hideTitle ? this.options.lineHeight ?? (this.options.fontSize ?? 10.5) * 1.5 :0));
+          // 根据宽高 判断 qrcode 上下、左右 留白边距
+          const paddingwidth = width >= height ? Math.abs(parseInt((width - height) / 2)) : 0;
+          const paddingheight = width >= height ? 0 : Math.abs(parseInt((height - width) / 2));
+          var qrcode = bwipjs.toSVG({
+            bcid: this.options.qrcodeType || 'qrcode',
+            text: text || this.options.testData || this.options.title,
+            scale: 1,
+            paddingwidth,
+            paddingheight,
+            // 保持 qrcode 始终为正方形
+            width: Math.min(parseInt(width / 2.835), parseInt(height / 2.835)),
+            height: Math.min(parseInt(width / 2.835), parseInt(height / 2.835)),
+            includetext: false,
+            eclevel: ['M', 'L', 'H', 'Q'][this.options.qrCodeLevel ?? 0],
+            barcolor: this.options.barColor || "#000",
+          })
+          content.html($(qrcode))
+          if (!this.options.hideTitle) {
+            const titleText = title ? title + ( text ? ':' : '' ) : '';
+            const textAlign = this.options.textAlign || 'center';
+            // 支持type为qrcode的textAlign属性
+            const textStyle = textAlign === 'justify' ? 'text-align-last: justify;text-justify: distribute-all-lines;' : `text-align: ${ textAlign };`
+            content.append($(`<div class="hiprint-printElement-qrcode-content-title" style="${ textStyle }">${ titleText }${ text }</div>`))
+          }
+        } catch (error) {
+          console.error(error)
+          content.html($(`<div>${i18n.__('二维码生成失败')}</div>`))
+        }
+      },
+      // 设置 qrcode 元素 resize 控制点
+      e.prototype.getReizeableShowPoints = function () {
+        return ['s', 'e', 'se', 'r'];
+      }, e.prototype.createTarget = function (title, data) {
+        var designTarget = $('<div class="hiprint-printElement hiprint-printElement-qrcode" style="position: absolute;"><div class="hiprint-printElement-qrcode-content" style="height:100%;width:100%;display:flex;flex-direction:column"></div></div>');
+        this.initQrcode(designTarget, title, data);
+        return designTarget;
+      }, e.prototype.getHtml = function (t, e, n) {
+        return this.getHtml2(t, e, n)
+      }, e;
+    }(f.a),
     W = function () {
       function t() {
       }
 
       return t.createPrintElement = function (t, e) {
-        return "text" == t.type ? new D(t, e) : "image" == t.type ? new v(t, e) : "longText" == t.type ? new w(t, e) : "table" == t.type ? new d.a(t, e) : "html" == t.type ? new S(t, e) : "vline" == t.type ? new F(t, e) : "hline" == t.type ? new A(t, e) : "rect" == t.type ? new k(t, e) : "oval" == t.type ? new V(t, e) : void 0;
+        return "text" == t.type ? new D(t, e) : "image" == t.type ? new v(t, e) : "longText" == t.type ? new w(t, e) : "table" == t.type ? new d.a(t, e) : "html" == t.type ? new S(t, e) : "vline" == t.type ? new F(t, e) : "hline" == t.type ? new A(t, e) : "rect" == t.type ? new k(t, e) : "oval" == t.type ? new V(t, e) : "barcode" == t.type ? new barcode(t, e) : "qrcode" == t.type ? new qrcode(t, e) : void 0;
       }, t;
     }(),
     j = function () {
@@ -8546,8 +9614,20 @@ var hiprint = function (t) {
           minMove: 4,
           onBeforeDrag: function onBeforeDrag(e) {
             s.a.instance.draging = !0;
-            var n = t.getElementType($(e.data.target).attr("tid"), $(e.data.target).attr("ptype"));
-            return s.a.instance.setDragingPrintElement(n.createPrintElement()), !0;
+            var tid = $(e.data.target).attr("tid");
+            var n = t.getElementType(tid, $(e.data.target).attr("ptype"));
+            if (!n) {
+              throw new Error(`${i18n.__('请检查 hiprint.init 的 provider 是否配置了')} [${tid}]`);
+              return !1;
+            }
+            var ele = n.createPrintElement();
+            if (!ele) {
+              if (n.type == 'tableCustom') {
+                throw new Error(`${i18n.__("已移除'tableCustom',请替换使用'table'详情见更新记录")}`);
+                return !1;
+              }
+            }
+            return s.a.instance.setDragingPrintElement(ele), !0;
           },
           onDrag: function onDrag(t, e, n) {
             s.a.instance.getDragingPrintElement().updatePosition(e, n);
@@ -8570,12 +9650,12 @@ var hiprint = function (t) {
     }(),
     rt = function () {
       return function (t) {
-        if (this.index = t.index, this.paperType = t.paperType, this.paperType) {
+        if (this.index = t.index, this.name = t.name, this.paperType = t.paperType, this.paperType) {
           var e = s.a.instance[this.paperType];
           t.height ? (this.height = t.height, this.width = t.width) : (this.height = e.height, this.width = e.width);
         } else this.height = t.height, this.width = t.width;
 
-        this.paperHeader = t.paperHeader || 0, this.paperFooter = t.paperFooter || o.a.mm.toPt(this.height), this.printElements = t.printElements || [], this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberFormat = t.paperNumberFormat, this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.rotate = t.rotate || void 0, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter, this.oddPaperFooter = t.oddPaperFooter, this.lastPaperFooter = t.lastPaperFooter, this.topOffset = t.topOffset, this.fontFamily = t.fontFamily, this.leftOffset = t.leftOffset, this.orient = t.orient, this.scale = t.scale;
+        this.paperHeader = t.paperHeader || 0, this.paperFooter = t.paperFooter || o.a.mm.toPt(this.height), this.printElements = t.printElements || [], this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberContinue = t.paperNumberContinue, this.paperNumberFormat = t.paperNumberFormat, this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.rotate = t.rotate || void 0, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter, this.oddPaperFooter = t.oddPaperFooter, this.lastPaperFooter = t.lastPaperFooter, this.topOffset = t.topOffset, this.fontFamily = t.fontFamily, this.leftOffset = t.leftOffset, this.orient = t.orient, this.scale = t.scale, this.watermarkOptions= t.watermarkOptions, this.panelLayoutOptions = t.panelLayoutOptions;
       };
     }(),
     at = function () {
@@ -8583,8 +9663,15 @@ var hiprint = function (t) {
         this.bx = t, this.by = e, this.ex = t, this.ey = e, this.startX = this.minX = t, this.startY = this.minY = e, this.maxX = t, this.maxY = e, this.lastLeft = n, this.lastTop = i;
       }
 
-      return t.prototype.updateRect = function (t, e) {
-        this.ex = t, this.ey = e, this.minX = this.startX < t ? this.startX : t, this.minY = this.startY < e ? this.startY : e, this.maxX = this.startX < t ? t : this.startX, this.maxY = this.startY < e ? e : this.startY;
+      return t.prototype.updateRect = function (t, e, i) {
+        var scale = i.designPaper.scale||1.0
+        this.ex = t
+        this.ey = e
+        this.minX = this.startX/scale < t/scale ? this.startX/scale : t/scale,
+        this.minY = this.startY/scale < e/scale ? this.startY/scale : e/scale,
+        this.maxX = this.startX/scale < t/scale ? t/scale : this.startX/scale,
+        this.maxY = this.startY/scale < e/scale ? e/scale : this.startY/scale;
+
       }, t.prototype.updatePositionByMultipleSelect = function (t, e) {
         null != t && (this.lastLeft = this.lastLeft + t), null != e && (this.lastTop = this.lastTop + e), this.target.css({
           left: this.lastLeft + "pt",
@@ -8594,7 +9681,7 @@ var hiprint = function (t) {
     }(),
     pt = function () {
       function t(t, e) {
-        this.templateId = e, this.index = t.index, this.width = t.width, this.height = t.height, this.paperType = t.paperType, this.paperHeader = t.paperHeader, this.paperFooter = t.paperFooter, this.initPrintElements(t.printElements), this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberFormat = t.paperNumberFormat, this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter, this.oddPaperFooter = t.oddPaperFooter, this.lastPaperFooter = t.lastPaperFooter, this.topOffset = t.topOffset, this.leftOffset = t.leftOffset, this.fontFamily = t.fontFamily, this.orient = t.orient, this.target = this.createTarget(), this.rotate = t.rotate, this.scale = t.scale;
+        this.templateId = e, this.index = t.index, this.name = t.name, this.width = t.width, this.height = t.height, this.paperType = t.paperType, this.paperHeader = t.paperHeader, this.paperFooter = t.paperFooter, this.initPrintElements(t.printElements), this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberContinue = t.paperNumberContinue == void 0 ? true : t.paperNumberContinue, this.paperNumberFormat = t.paperNumberFormat, this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter, this.oddPaperFooter = t.oddPaperFooter, this.lastPaperFooter = t.lastPaperFooter, this.topOffset = t.topOffset, this.leftOffset = t.leftOffset, this.fontFamily = t.fontFamily, this.orient = t.orient, this.target = this.createTarget(), this.rotate = t.rotate, this.scale = t.scale, this.watermarkOptions = t.watermarkOptions || {}, this.panelLayoutOptions = t.panelLayoutOptions || {};
       }
 
       return t.prototype.design = function (t) {
@@ -8604,23 +9691,31 @@ var hiprint = function (t) {
         }), this.printElements.forEach(function (n) {
           e.appendDesignPrintElement(e.designPaper, n), n.design(t, e.designPaper);
         }), this.target.bind("click.hiprint", function (t) {
+          let panelOptions = {
+            panelPaperRule: e.panelPaperRule,
+            panelPageRule: e.panelPageRule,
+            firstPaperFooter: e.firstPaperFooter,
+            evenPaperFooter: e.evenPaperFooter,
+            oddPaperFooter: e.oddPaperFooter,
+            lastPaperFooter: e.lastPaperFooter,
+            leftOffset: e.leftOffset,
+            topOffset: e.topOffset,
+            panelLayoutOptions:e.panelLayoutOptions || {},
+            fontFamily: e.fontFamily,
+            orient: e.orient,
+            paperNumberDisabled: e.paperNumberDisabled,
+            paperNumberContinue: e.paperNumberContinue,
+            paperNumberFormat: e.paperNumberFormat,
+            watermarkOptions: e.watermarkOptions || {},
+          };
+          if (!p.a.instance.paperNumberContinue) {
+            delete panelOptions['paperNumberContinue'];
+          }
           o.a.event.trigger("BuildCustomOptionSettingEventKey_" + e.templateId, {
-            options: {
-              panelPaperRule: e.panelPaperRule,
-              panelPageRule: e.panelPageRule,
-              firstPaperFooter: e.firstPaperFooter,
-              evenPaperFooter: e.evenPaperFooter,
-              oddPaperFooter: e.oddPaperFooter,
-              lastPaperFooter: e.lastPaperFooter,
-              leftOffset: e.leftOffset,
-              topOffset: e.topOffset,
-              fontFamily: e.fontFamily,
-              orient: e.orient,
-              paperNumberDisabled: e.paperNumberDisabled,
-              paperNumberFormat: e.paperNumberFormat
-            },
+            options: panelOptions,
             callback: function callback(t) {
-              e.panelPaperRule = t.panelPaperRule, e.panelPageRule = t.panelPageRule, e.firstPaperFooter = t.firstPaperFooter, e.evenPaperFooter = t.evenPaperFooter, e.oddPaperFooter = t.oddPaperFooter, e.lastPaperFooter = t.lastPaperFooter, e.leftOffset = t.leftOffset, e.topOffset = t.topOffset, e.fontFamily = t.fontFamily, e.orient = t.orient, e.paperNumberDisabled = e.designPaper.paperNumberDisabled = !!t.paperNumberDisabled || void 0, e.paperNumberFormat = t.paperNumberFormat, e.designPaper.paperNumberFormat = t.paperNumberFormat, (t.paperNumberFormat && (e.designPaper.paperNumberTarget = e.designPaper.createPaperNumber(e.designPaper.formatPaperNumber(1, 1), true))), e.designPaper.setOffset(e.leftOffset, e.topOffset), e.css(e.target), e.designPaper.resetPaperNumber(e.designPaper.paperNumberTarget), e.designPaper.triggerOnPaperBaseInfoChanged();
+              e.panelLayoutOptions = t.panelLayoutOptions || {},e.watermarkOptions = t.watermarkOptions || void 0, (t.watermarkOptions && e.designPaper.createWaterMark(true, 1, t.watermarkOptions))
+              e.panelPaperRule = t.panelPaperRule, e.panelPageRule = t.panelPageRule, e.firstPaperFooter = t.firstPaperFooter, e.evenPaperFooter = t.evenPaperFooter, e.oddPaperFooter = t.oddPaperFooter, e.lastPaperFooter = t.lastPaperFooter, e.leftOffset = t.leftOffset, e.topOffset = t.topOffset, e.fontFamily = t.fontFamily, e.orient = t.orient, e.paperNumberDisabled = e.designPaper.paperNumberDisabled = !!t.paperNumberDisabled || void 0, e.paperNumberContinue = e.designPaper.paperNumberContinue = t.paperNumberContinue, e.paperNumberFormat = t.paperNumberFormat, e.designPaper.paperNumberFormat = t.paperNumberFormat, (t.paperNumberFormat && (e.designPaper.paperNumberTarget = e.designPaper.createPaperNumber(e.designPaper.formatPaperNumber(1, 1), true))), e.designPaper.setOffset(e.leftOffset, e.topOffset), e.css(e.target), e.designPaper.resetPaperNumber(e.designPaper.paperNumberTarget), e.designPaper.triggerOnPaperBaseInfoChanged();
             }
           });
         }), this.bindShortcutKeyEvent();
@@ -8628,12 +9723,10 @@ var hiprint = function (t) {
         this.bindBatchMoveElement();
       }, t.prototype.update = function (t) {
         try {
-          console.log('update ------>')
-          console.log(t)
           var start = Date.now();
           console.log('start', start)
           var e = this;
-          this.index = t.index, this.width = t.width, this.height = t.height, this.paperType = t.paperType, this.paperHeader = t.paperHeader, this.paperFooter = t.paperFooter;
+          this.index = t.index, this.name = t.name, this.width = t.width, this.height = t.height, this.paperType = t.paperType, this.paperHeader = t.paperHeader, this.paperFooter = t.paperFooter;
           this.designPaper.width = o.a.mm.toPt(t.width), this.designPaper.height = o.a.mm.toPt(this.height), this.designPaper.paperType = this.paperType, this.designPaper.paperHeader = this.paperHeader, this.designPaper.paperFooter = this.paperFooter;
           this.designPaper.mmheight = t.height, this.designPaper.mmwidth = t.width;
           // 页眉线
@@ -8642,18 +9735,29 @@ var hiprint = function (t) {
           // 页脚线
           this.designPaper.footerLinetarget.css("top", parseInt(this.paperFooter.toString()) + "pt"),
           this.paperFooter == this.height && (this.designPaper.footerLinetarget.css("top", t.height - p.a.instance.paperHeightTrim + "mm"));
+          // 水印参数
+          this.watermarkOptions = t.watermarkOptions || {};
+          this.designPaper.createWaterMark(true, this.index, this.watermarkOptions);
           // 页码
-          this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberFormat = t.paperNumberFormat;
-          this.designPaper.paperNumberLeft = this.paperNumberLeft, this.designPaper.paperNumberTop = this.paperNumberTop, this.designPaper.paperNumberDisabled = this.paperNumberDisabled, this.designPaper.paperNumberFormat = this.paperNumberFormat;
+          this.paperNumberLeft = t.paperNumberLeft, this.paperNumberTop = t.paperNumberTop, this.paperNumberDisabled = t.paperNumberDisabled, this.paperNumberContinue = t.paperNumberContinue, this.paperNumberFormat = t.paperNumberFormat;
+          this.designPaper.paperNumberLeft = this.paperNumberLeft, this.designPaper.paperNumberTop = this.paperNumberTop, this.designPaper.paperNumberDisabled = this.paperNumberDisabled, this.designPaper.paperNumberContinue = this.paperNumberContinue, this.designPaper.paperNumberFormat = this.paperNumberFormat;
           this.designPaper.paperNumberTarget.css("top", this.paperNumberTop + "pt").css("left", this.paperNumberLeft + "pt"), this.designPaper.resetPaperNumber(this.designPaper.paperNumberTarget);
           // 字体方向
           this.fontFamily = t.fontFamily, this.orient = t.orient, this.rotate = t.rotate, this.scale = t.scale;
-          this.designPaper.fontFamily = this.fontFamily, this.designPaper.orient = this.orient, this.designPaper.scale = this.scale;
+          this.designPaper.fontFamily = this.fontFamily, this.designPaper.orient = this.orient, this.designPaper.scale = e.designPaper.scale || this.scale;
           // 面板参数
-          this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter,
+          this.panelLayoutOptions = t.panelLayoutOptions, this.panelPaperRule = t.panelPaperRule, this.panelPageRule = t.panelPageRule, this.firstPaperFooter = t.firstPaperFooter, this.evenPaperFooter = t.evenPaperFooter,
             this.oddPaperFooter = t.oddPaperFooter, this.lastPaperFooter = t.lastPaperFooter, this.topOffset = t.topOffset, this.leftOffset = t.leftOffset;
           this.designPaper.setFooter(this.firstPaperFooter, this.evenPaperFooter, this.oddPaperFooter, this.lastPaperFooter),
             this.designPaper.setOffset(this.leftOffset, this.topOffset);
+          // 宽高
+          this.target.css("width", t.width + "mm"),
+          this.target.css("height", t.height - p.a.instance.paperHeightTrim + "mm"),
+          this.target.attr("original-height", t.height),
+          this.target.parent().css("width", t.width + "mm"),
+          this.target.parent().css("height", t.height - p.a.instance.paperHeightTrim + "mm"),
+          this.designPaper.target.css("width", t.width + "mm"),
+          this.designPaper.target.css("height", t.height - p.a.instance.paperHeightTrim + "mm");
           var end = Date.now();
           console.log('更新参数 end', end)
           console.log('更新参数 time:', end - start)
@@ -8709,36 +9813,72 @@ var hiprint = function (t) {
         if (!copyArea.length) return;
         try {
           var json = copyArea.text();
-          var obj = JSON.parse(json);
-          if (!obj.printElementType && !obj.templateId) return;
-          // 复制使用当前模板内的元素 进行克隆
-          // todo: 使用参数创建
-          var n = this, r = obj.options, ele = n.getElementById(obj.id);
-          if (!ele) return;
-          var a = ele.clone(obj);
-          if (!a) return;
-          // 判断是否是在元素上进行paste
-          var useMouse = e.currentTarget.className != e.target.className;
-          var left = (!useMouse && n.mouseOffsetX && o.a.px.toPt(n.mouseOffsetX)) || (r.left += 10);
-          var top = (!useMouse && n.mouseOffsetY && o.a.px.toPt(n.mouseOffsetY)) || (r.top += 10);
-          a.options.setLeft(left);
-          a.options.setTop(top);
-          a.setTemplateId(n.templateId), a.setPanel(n);
-          n.appendDesignPrintElement(n.designPaper, a, !1);
-          n.printElements.push(a), a.design(void 0, n.designPaper);
-          console.log('pasteJson success');
-          o.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "复制");
-          // 点击克隆出来的元素
-          a.designTarget.children('.resize-panel').trigger($.Event('click'));
+          var objList = JSON.parse(json);
+          let operationPasterPosition = null
+          let replacePosition = null
+          var left = null
+          var top = null
+          objList.forEach((obj,index) => {
+            if (!obj.printElementType && !obj.templateId) return;
+            // 复制使用当前模板内的元素 进行克隆
+            // todo: 使用参数创建
+            var n = this, r = obj.options, ele = n.getElementById(obj.id);
+            if (!ele) return;
+            var a = ele.clone(obj);
+            if (!a) return;
+            // 判断是否是在元素上进行paste
+            if(index === 0){
+              operationPasterPosition = {
+                x: obj.options.left,
+                y: obj.options.top
+              }
+              var useMouse = e.currentTarget.className != e.target.className;
+              left = (!useMouse && n.mouseOffsetX && o.a.px.toPt(n.mouseOffsetX)) || (r.left += 10);
+              top = (!useMouse && n.mouseOffsetY && o.a.px.toPt(n.mouseOffsetY)) || (r.top += 10);
+              replacePosition = {
+                x: left,
+                y: top
+              }
+            }else{
+              const position = {
+                x: obj.options.left,
+                y: obj.options.top
+              }
+              const incrementPosition = {
+                x: position.x - operationPasterPosition.x,
+                y: position.y - operationPasterPosition.y
+              }
+              left = replacePosition.x + incrementPosition.x
+              top = replacePosition.y + incrementPosition.y
+
+            }
+            a.options.setLeft(left);
+            a.options.setTop(top);
+            a.setTemplateId(n.templateId), a.setPanel(n);
+            n.appendDesignPrintElement(n.designPaper, a, !1);
+            // 在复制的地方也重新给他算轮次
+            const template = s.a.instance.getPrintTemplateById(n.templateId)
+            if(a.options.field && template.qtDesigner){
+              a.options.qid = template.qtDesignderFunction(a.options.field)
+            }
+            n.printElements.push(a), a.design(void 0, n.designPaper);
+            console.log('pasteJson success');
+            o.a.event.trigger("hiprintTemplateDataChanged_" + n.templateId, "复制");
+            // 点击克隆出来的元素
+            a.designTarget.children('.resize-panel').trigger($.Event('click'));
+          })
         } catch (e) {
           console.error('pasteJson error', e);
         }
       }, t.prototype.css = function (t) {
         if (this.fontFamily) t.css("fontFamily", this.fontFamily);
         else t[0].style.fontFamily = '';
+      }, t.prototype.getConfig = function () {
+        return p.a.instance;
       }, t.prototype.getHtml = function (t, e, n, i, o) {
         var r = this;
         this.orderPrintElements();
+        let config = r.getConfig();
         var a,
           p = n || [],
           s = i || this,
@@ -8768,7 +9908,7 @@ var hiprint = function (t) {
         }).forEach(function (e) {
           var n = [],
             i = p[p.length - 1];
-          if (i.referenceElement.isPositionLeftOrRight(e.options.getTop(), e.options.getHeight())) {
+          if (i.referenceElement.isPositionLeftOrRight(e.options.getTop())) {
             l = p[i.referenceElement.beginPrintPaperIndex];
           } else {
             l = p[i.referenceElement.endPrintPaperIndex];
@@ -8797,6 +9937,15 @@ var hiprint = function (t) {
             t.getHtml(i, o, n, r);
           });
         });
+        // config 是否开启页码续排
+        if (config.paperNumberContinue) {
+          // 面板是否页码续排
+          if (r.paperNumberContinue) {
+            hinnn._paperList = [...(hinnn._paperList||[]),...p];
+          } else {
+            hinnn._paperList = [...p];
+          }
+        }
         if (!i) {
           if (this.lastPaperFooter) p[p.length - 1].printLine > this.lastPaperFooter && (l = s.createNewPage(p.length, l.referenceElement), p.push(l), a.append(l.getTarget()));
           // 这里是处理奇偶页设置
@@ -8805,6 +9954,12 @@ var hiprint = function (t) {
             n.updatePaperNumber(n.index + 1, p.length, e.paperNumberToggleInEven), r.fillPaperHeaderAndFooter(n, t, p.length), e && (null != e.leftOffset && n.setLeftOffset(e.leftOffset), null != e.topOffset && n.setTopOffset(e.topOffset));
           });
           a.prepend(this.getPrintStyle());
+          // config 是否开启页码续排
+          if (config.paperNumberContinue) {
+            hinnn._paperList.forEach(function (n, index) {
+              n.updatePaperNumber(index + 1, hinnn._paperList.length)
+            });
+          }
         }
 
         return a;
@@ -8831,12 +9986,14 @@ var hiprint = function (t) {
           e.push(n.getPrintElementEntity(t));
         }), new rt({
           index: this.index,
+          name: this.name || this.index + 1,
           width: this.width,
           height: this.height,
           paperType: this.paperType,
           paperHeader: this.paperHeader,
           paperFooter: this.paperFooter,
           paperNumberDisabled: !!this.paperNumberDisabled || void 0,
+          paperNumberContinue: this.paperNumberContinue == void 0 ? !0 : this.paperNumberContinue,
           paperNumberFormat: this.paperNumberFormat ? this.paperNumberFormat : void 0,
           panelPaperRule: this.panelPaperRule ? this.panelPaperRule : void 0,
           panelPageRule: this.panelPageRule ? this.panelPageRule : void 0,
@@ -8852,7 +10009,9 @@ var hiprint = function (t) {
           fontFamily: this.fontFamily,
           orient: this.orient,
           scale: this.scale,
-          leftOffset: this.leftOffset
+          watermarkOptions: this.watermarkOptions ? this.watermarkOptions : void 0,
+          leftOffset: this.leftOffset,
+          panelLayoutOptions: this.panelLayoutOptions || {}
         });
       }, t.prototype.createTarget = function () {
         var t = $('<div class="hiprint-printPanel panel-index-' + this.index + '"></div>');
@@ -8862,6 +10021,7 @@ var hiprint = function (t) {
         t.getTarget().hidroppable({
           accept: ".ep-draggable-item",
           onDrop: function onDrop(n, i) {
+            const template = s.a.instance.getPrintTemplateById(e.templateId)
             var r = s.a.instance.getDragingPrintElement(),
               a = r.printElement;
             var ptr = e.designPaper.scale || 1;
@@ -8869,6 +10029,10 @@ var hiprint = function (t) {
               top = (r.top - o.a.px.toPt(e.target.children(".hiprint-printPaper").offset().top)) / ptr;
             a.updateSizeAndPositionOptions(e.mathroundToporleft(left), e.mathroundToporleft(top));
             a.setTemplateId(e.templateId), a.setPanel(e), e.appendDesignPrintElement(e.designPaper, a, !0);
+            // 如果说编辑器开启qtDesigner,那么就将唯一ID构建唯一ID生成逻辑代码
+            if(a.options.field && template.qtDesigner){
+              a.options.qid = template.qtDesignderFunction(a.options.field)
+            }
             e.printElements.push(a), a.design(void 0, t);
             o.a.event.trigger("hiprintTemplateDataChanged_" + e.templateId, "新增");
           }
@@ -8891,7 +10055,7 @@ var hiprint = function (t) {
         var i = e.getDesignTarget(t);
         i.addClass("design"), n && e.initSizeByHtml(i), t.append(i);
       }, t.prototype.createNewPage = function (t, e) {
-        var n = new T(this.templateId, this.panelPageRule, this.scale, this.width, this.height, this.paperHeader, this.paperFooter, this.paperNumberLeft, this.paperNumberTop, this.paperNumberDisabled, this.paperNumberFormat, t, e);
+        var n = new T(this.templateId, this.index, this.watermarkOptions, this.panelPageRule, this.scale, this.width, this.height, this.paperHeader, this.paperFooter, this.paperNumberLeft, this.paperNumberTop, this.paperNumberDisabled, this.paperNumberContinue, this.paperNumberFormat, t, e);
         return n.setFooter(this.firstPaperFooter, this.evenPaperFooter, this.oddPaperFooter, this.lastPaperFooter), n.setOffset(this.leftOffset, this.topOffset), n;
       }, t.prototype.orderPrintElements = function () {
         this.printElements = o.a.orderBy(this.printElements, function (t) {
@@ -8947,7 +10111,21 @@ var hiprint = function (t) {
         var e;
         return (e = t.tid ? a.instance.getElementType(t.tid) : nt.createPrintElementType(t.printElementType)) || console.log("miss " + JSON.stringify(t)), e;
       }, t.prototype.getPrintStyle = function () {
-        return " <style printStyle>\n        @page\n        {\n             border:0;\n             padding:0cm;\n             margin:0cm;\n             " + this.getPrintSizeStyle() + "\n        }\n        </style>\n";
+        let layoutStyle = ''
+        if(this.panelLayoutOptions && this.panelLayoutOptions['layoutType'] === 'row'){
+          layoutStyle = `
+            <style>
+            .hiprint-printTemplate{
+              margin: -${(Number(this.panelLayoutOptions['layoutRowGap']) || 0) / 2}mm -${(Number(this.panelLayoutOptions['layoutColumnGap']) || 0) / 2}mm;
+            }
+              .hiprint-printTemplate .hiprint-printPanel {
+                display:inline-block;
+                padding: ${(Number(this.panelLayoutOptions['layoutRowGap']) || 0) / 2}mm ${(Number(this.panelLayoutOptions['layoutColumnGap']) || 0) / 2}mm;
+              }
+            </style>
+          `
+        }
+        return layoutStyle + " <style printStyle>\n        @page\n        {\n             border:0;\n             padding:0cm;\n             margin:0cm;\n             " + this.getPrintSizeStyle() + "\n        }\n        </style>\n";
       }, t.prototype.getPrintSizeStyle = function () {
         return this.paperType ? "size:" + this.paperType + " " + (this.height > this.width ? "portrait" : "landscape") + ";" : "size: " + this.width + "mm " + this.height + "mm " + (this.orient ? 1 == this.orient ? "portrait" : "landscape" : "") + ";";
       }, t.prototype.deletePrintElement = function (t) {
@@ -8976,10 +10154,17 @@ var hiprint = function (t) {
         return this.printElements.forEach(function (e) {
           e.options && e.options.field ? t.push(e.options.field) : e.printElementType.field && t.push(e.printElementType.field);
         }), t;
+      }, t.prototype.getTestData = function () {
+        var t = {};
+        return this.printElements.forEach(function (e) {
+          if ("table" != e.printElementType.type) {
+            e.options && e.options.field ? t[e.options.field] = e.options.testData : e.printElementType.field ? t[e.printElementType.field] = e.printElementType.data || e.options.testData : void 0;
+          }
+        }), t;
       }, t.prototype.bindBatchMoveElement = function () {
         var t = this;
         this.designPaper.getTarget().on("mousemove", function (e) {
-          if ((e.target.className && _typeof(e.target.className) == "string" && (e.target.className.includes("resize-panel") || e.target.className.includes("editing")))) {
+          if ((e.target.className && _typeof(e.target.className) == "string" && (e.target.className.includes("editing")))) {
             return;
           }
           if (e.currentTarget.className == t.designPaper.target[0].className) {
@@ -8987,13 +10172,13 @@ var hiprint = function (t) {
           } else {
             t.mouseOffsetX = t.mouseOffsetY = void 0;
           }
-          s.a.instance.draging || 1 === e.buttons && s.a.instance.rectDraging && (t.mouseRect && (t.mouseRect.updateRect(e.pageX, e.pageY), t.updateRectPanel(t.mouseRect)));
+          s.a.instance.draging || 1 === e.buttons && s.a.instance.rectDraging && (t.mouseRect && (t.mouseRect.updateRect(e.pageX, e.pageY, t), t.updateRectPanel(t.mouseRect)));
         }).on("mousedown", function (e) {
           s.a.instance.rectDraging = true;
-          if ((e.target.className && _typeof(e.target.className) == "string" && (e.target.className.includes("resize-panel") || e.target.className.includes("editing")))) {
+          if ((e.target.className && _typeof(e.target.className) == "string" && (e.target.className.includes("editing")))) {
             return;
           }
-          s.a.instance.draging || (t.mouseRect && t.mouseRect.target && t.mouseRect.target.remove(), 1 === e.buttons && e.target.className == "hiprint-printPaper hidroppable design" && (t.mouseRect = new at(e.pageX, e.pageY, s.a.instance.dragLengthCNum(e.pageX - t.designPaper.getTarget().offset().left, p.a.instance.movingDistance), s.a.instance.dragLengthCNum(e.pageY - t.designPaper.getTarget().offset().top, p.a.instance.movingDistance))));
+          s.a.instance.draging || (t.mouseRect && t.mouseRect.target && t.mouseRect.target.remove(), 1 === e.buttons && _typeof(e.target.className) == "string" && e.target.className.includes("hiprint-printPaper hidroppable design") && (t.mouseRect = new at(e.pageX, e.pageY, s.a.instance.dragLengthCNum(e.pageX - t.designPaper.getTarget().offset().left, p.a.instance.movingDistance), s.a.instance.dragLengthCNum(e.pageY - t.designPaper.getTarget().offset().top, p.a.instance.movingDistance))));
         }).on("mouseup", function (e) {
           s.a.instance.rectDraging = false;
         });
@@ -9010,19 +10195,21 @@ var hiprint = function (t) {
         var ptr = this.designPaper.scale || 1;
         this.mouseRect.target || (this.mouseRect.target = $('<div tabindex="1" class="mouseRect" style="z-index:2;position: absolute;opacity:0.2;border: 1px dashed #000;background-color:#31676f;"><span></span></div>'), n.find(".hiprint-printPaper-content").append(this.mouseRect.target), this.bingKeyboardMoveEvent(this.mouseRect.target), this.mouseRect.target.hidraggable({
           onDrag: function onDrag(t, n, i) {
-            e.mouseRect.target.css({
-              transform: 'unset'
-            }),
               e.mouseRect.lastLeft = e.mouseRect.lastLeft ? o.a.px.toPt(e.mouseRect.target[0].offsetLeft) : n / ptr, e.mouseRect.lastTop = e.mouseRect.lastTop ? o.a.px.toPt(e.mouseRect.target[0].offsetTop) : i / ptr
               , (e.mouseRect.mouseRectSelectedElement || []).forEach(function (t) {
               t.updatePositionByMultipleSelect(n - e.mouseRect.lastLeft, i - e.mouseRect.lastTop);
-            }), e.mouseRect.lastLeft = n / ptr, e.mouseRect.lastTop = i / ptr;
+            }),
+            e.mouseRect.lastLeft = n / ptr,
+            e.mouseRect.lastTop = i / ptr,
             s.a.instance.changed = !0;
           },
           moveUnit: "pt",
           minMove: p.a.instance.movingDistance,
           onBeforeDrag: function onBeforeDrag(t) {
             e.mouseRect.target.focus(), s.a.instance.draging = !0, e.mouseRect.mouseRectSelectedElement || (e.mouseRect.mouseRectSelectedElement = e.getElementInRect(e.mouseRect));
+            e.mouseRect.target.css({
+              transform: 'unset'
+            });
           },
           getScale: function getScale() {
             return e.designPaper.scale || 1;
@@ -9050,24 +10237,24 @@ var hiprint = function (t) {
             transform: 'rotate(180deg)',
             'transform-origin': '0 0'
           });
-        } else {
-          var r = '', f = 'rotate(180deg)';
-          if (t.startX == t.minX || t.startX == t.maxX) {
-            if (t.ey >= t.by) {
-              f = 'scaleX(-1)', r = 'left'
-            } else {
-              r = 'center top'
-            }
-          } else if (t.startY == t.minY || t.startY == t.maxY) {
-            r = t.ex >= t.bx ? 'right' : 'left'
-          }
+        // 左下角
+        } else if (t.ex < t.bx && t.ey >t.by){
           this.mouseRect.target.css({
             height: t.maxY - t.minY + "px",
             width: t.maxX - t.minX + "px",
             left: t.lastLeft / ptr + "pt",
             top: t.lastTop / ptr + "pt",
-            transform: f,
-            'transform-origin': r
+            transform: 'rotateY(180deg)',
+            'transform-origin': '0 0'
+          });
+        } else if (t.ex > t.bx && t.ey < t.by){
+          this.mouseRect.target.css({
+            height: t.maxY - t.minY + "px",
+            width: t.maxX - t.minX + "px",
+            left: t.lastLeft / ptr + "pt",
+            top: t.lastTop / ptr + "pt",
+            transform: 'rotateX(180deg)',
+            'transform-origin': '0 0'
           });
         }
         t.target.focus()
@@ -9163,10 +10350,10 @@ var hiprint = function (t) {
         var r;
         if (tabs.length) {
           r = $('<div class="prop-tabs"><ul class="prop-tab-items"></ul></div>');
-          tabs.forEach(function (tab) {
-            var item = $('<li class="prop-tab-item"><span class="tab-title">' + tab.name + '</span></li>')
+          tabs.filter((e,idx) => e.list.length > 0 || (idx == 2 && o && o.length)).forEach(function (tab) {
+            var item = $('<li class="prop-tab-item"><span class="tab-title">' + i18n.__(tab.name) + '</span></li>')
             r.find('.prop-tab-items').append(item)
-            var options = $('<div class="hiprint-option-items" data-title="' + tab.name + '"></div>')
+            var options = $('<div class="hiprint-option-items" data-title="' + i18n.__(tab.name) + '"></div>')
             tab.list.forEach(function (t) {
               t.submit = function (t) {
                 i.submitOption();
@@ -9185,12 +10372,18 @@ var hiprint = function (t) {
                   t.setValue(i.options[t.name] || i.printElementType[t.name])
                 }
               }
+              n.find("textarea").bind("dblclick.textarea", function (event) {
+                if (!$(this).val()) {
+                  var placeholder = event.target.placeholder || "";
+                  $(this).val(placeholder);
+                };
+              });
             })
             if (tab.list.length == 0 && o && o.length) {
               o.forEach(function (t) {
                 var n2 = t.callback;
                 t.callback = function (t) {
-                  n2 && (n2(t), i.submitOption());
+                  n2 && (n2(t));
                 };
                 var tableColumn = t.optionItems;
                 t.title && options.append('<div class="hiprint-option-item hiprint-option-item-row">\n            <div class="hiprint-option-item-label hiprint-option-title">\n              ' + t.title + "\n            </div>\n        </div>");
@@ -9200,15 +10393,18 @@ var hiprint = function (t) {
                   }, options.append(e.createTarget(n.printTemplate, t.options, void 0)),
                     e.setValue(t.options[e.name], t.options, void 0);
                 });
-                options.bind('click.submitOption', function () {
-                  t.callback(n.getValueByOptionItems(tableColumn));
-                })
                 options.find('.auto-submit').change(function () {
                   t.callback(n.getValueByOptionItems(tableColumn))
                 })
                 options.find('.auto-submit:input').bind('keydown.submitOption', function (e) {
                   13 === e.keyCode && t.callback(n.getValueByOptionItems(tableColumn));
                 })
+                options.find("textarea").bind("dblclick.textarea", function (event) {
+                  if (!$(this).val()) {
+                    var placeholder = event.target.placeholder || "";
+                    $(this).val(placeholder);
+                  };
+                });
               })
             }
             r.append(options)
@@ -9236,9 +10432,10 @@ var hiprint = function (t) {
             }
           });
         }
-        var a = $('<button class="hiprint-option-item-settingBtn hiprint-option-item-submitBtn"\n        type="button">确定</button>'),
-          p = $('<button  class="hiprint-option-item-settingBtn hiprint-option-item-deleteBtn"\n        type="button">删除</button>');
-        r.append(a), r.append(p);
+        var a = $(`<button class="hiprint-option-item-settingBtn hiprint-option-item-submitBtn"\n        type="button">${i18n.__('确定')}</button>`),
+          p = $(`<button  class="hiprint-option-item-settingBtn hiprint-option-item-deleteBtn"\n        type="button">${i18n.__('删除')}</button>`);
+        r.append(a);
+        i.options.draggable != false && r.append(p); // draggable 为 false 时不显示参数面板 删除 按钮
         if (tabs.length) {
           r.on('click', '.prop-tab-item', function () {
             var $li = $(this);
@@ -9260,6 +10457,7 @@ var hiprint = function (t) {
         a.bind("click.submitOption", function () {
           i.submitOption();
         }), p.bind("click.deleteBtn", function () {
+          hinnn.event.trigger("hiprintTemplateDataChanged_" + i.templateId, "删除");
           n.printTemplate.deletePrintElement(i);
           e.clearSettingContainer();
         }), r.find(".auto-submit").change(function (t) {
@@ -9294,7 +10492,7 @@ var hiprint = function (t) {
             t.callback(n.getValueByOptionItems(o));
           }, r.append(e.createTarget(n.printTemplate, t.options, void 0)), e.setValue(t.options[e.name], t.options, void 0);
         });
-        var a = $('<button class="hiprint-option-item-settingBtn hiprint-option-item-submitBtn"\n        type="button">确定</button>');
+        var a = $(`<button class="hiprint-option-item-settingBtn hiprint-option-item-submitBtn"\n        type="button">${i18n.__('确定')}</button>`);
         r.append(a), a.bind("click.submitOption", function () {
           t.callback(n.getValueByOptionItems(o));
         }), r.find(".auto-submit").change(function (e) {
@@ -9321,9 +10519,10 @@ var hiprint = function (t) {
 
         for (var i = $('<ul class="hiprint-pagination"></ul>'), o = function o() {
           var t = r,
-            e = $("<li><span>" + (t + 1) + '</span><a href="javascript:void(0);">x</a></li>');
+            name = n.template.printPanels[t].name || (t + 1),
+            e = $("<li><span>" + name + '</span><a href="javascript:void(0);">x</a></li>');
           e.find("span").click(function () {
-            n.template.selectPanel(t), e.removeClass("selected"), $(this).parent("li").addClass("selected");
+            n.template.selectPanel(t), e.siblings().removeClass("selected"), $(this).parent("li").addClass("selected");
           }), e.find("a").click(function () {
             n.template.deletePanel(t), n.buildPagination();
           }), i.append(e);
@@ -9333,8 +10532,29 @@ var hiprint = function (t) {
 
         var a = $("<li><span>+</span></li>");
         i.append(a), this.jqPaginationContainer.append(i), a.click(function () {
-          n.template.addPrintPanel(void 0, !0), n.buildPagination();
+          var createPanel = function(t) {
+            n.template.addPrintPanel(t || void 0, !0), n.buildPagination();
+            $('.hiprint-pagination li').removeClass('selected');
+            $('.hiprint-pagination li:nth-last-child(2)').addClass('selected');
+          };
+          if (n.template.onPanelAddClick) {
+            var panel = {
+              index: n.template.printPanels.length,
+              paperType: "A4"
+            }
+            n.template.onPanelAddClick(panel, createPanel);
+          } else {
+            createPanel();
+          }
         });
+      }, t.prototype.selectPanel = function (idx) {
+        var i = idx || this.template.editingPanel.index;
+        var li = $('.hiprint-pagination li:nth(' + i + ')');
+        if (li.length) {
+          li.siblings().removeClass('selected');
+          li.addClass("selected");
+        }
+	hinnn.event.trigger("onSelectPanel", this.template.editingPanel, i, li);
       }, t;
     }(),
     ct = function () {
@@ -9345,15 +10565,41 @@ var hiprint = function (t) {
         this.printPanels = [];
         this.dataMode = n.dataMode || 1;
         this.history = n.history != void 0 ? n.history : !0;
+        this.willOutOfBounds = n.willOutOfBounds != void 0 ? n.willOutOfBounds : !0;
         this.onDataChanged = n.onDataChanged;
         this.onUpdateError = n.onUpdateError;
         this.lastJson = n.template || {};
         this.historyList = [{id: s.a.instance.guid(), type: '初始', json: this.lastJson}];
         this.historyPos = 0;
+        this.defaultPanelName = n.defaultPanelName;
+        this.designOptions = {};
+        this.qtDesigner = n.qtDesigner != void 0 ? n.qtDesigner : !0;
+        this.qtDesignerMap = {}
+        this.qtDesignderFunction = function(field){
+          this.qtDesignerMap = {}
+          const fieldTitle = field.split("_")[0]
+          for(const item of this.editingPanel.printElements){
+            if(item.options.field === void 0){
+              continue
+            }
+            const renderKey = item.options.field.split("_")[0]
+            if(this.qtDesignerMap[renderKey] === void 0){
+              this.qtDesignerMap[renderKey] = 1
+            }else{
+              this.qtDesignerMap[renderKey] += 1
+            }
+          }
+          if(this.qtDesignerMap[fieldTitle] === 0||this.qtDesignerMap[fieldTitle] === void 0){
+            return fieldTitle
+          }else{
+            return fieldTitle +"_"+ this.qtDesignerMap[fieldTitle]
+          }
+        }
         var i = new st(n.template || []);
         n.template && i.panels.forEach(function (t) {
           e.printPanels.push(new pt(t, e.id));
         }), n.fontList && (this.fontList = n.fontList), n.fields && (this.fields = n.fields), n.onImageChooseClick && (this.onImageChooseClick = n.onImageChooseClick),
+          n.onPanelAddClick && (this.onPanelAddClick = n.onPanelAddClick),
         n.settingContainer && new ut(this, n.settingContainer), n.paginationContainer && (this.printPaginationCreator = new dt(n.paginationContainer, this), this.printPaginationCreator.buildPagination()), this.initAutoSave();
       }
 
@@ -9366,6 +10612,7 @@ var hiprint = function (t) {
         }
 
         if (!t) throw new Error("options.container can not be empty");
+        n.designOptions = e;
         this.createContainer(t), this.printPanels.forEach(function (t, i) {
           n.container.append(t.getTarget()), i > 0 && t.disable(), t.design(e);
         }), this.selectPanel(0);
@@ -9373,16 +10620,59 @@ var hiprint = function (t) {
         var n = this;
         e || (e = {});
         var i = $('<div class="hiprint-printTemplate"></div>');
-        t && t.constructor === Array ? t.forEach(function (t) {
-          t && n.printPanels.forEach(function (n, o) {
-            i.append(n.getHtml(t, e));
+        t && t.constructor === Array ? t.forEach(function (data,dataIndex) {
+          data && n.printPanels.forEach(function (n, o) {
+            i.append(n.getHtml(data, e));
+            // 批量打印 续排页码
+            if (dataIndex == t.length - 1) {
+              delete hinnn._paperList;
+            }
           });
-        }) : this.printPanels.forEach(function (n, o) {
-          i.append(n.getHtml(t, e));
+        }) : this.printPanels.forEach(function (panel, panelIndex) {
+          i.append(panel.getHtml(t, e));
+          // 多面板打印 续排页码
+          if (panelIndex == n.printPanels.length - 1) {
+            delete hinnn._paperList;
+          }
         });
         return e && e.imgToBase64 && this.transformImg(i.find("img")), i;
+      }, t.prototype.getSimpleHtmlAsync = function (dataItemOrList, e) {
+        return new Promise(resolve => {
+          var that = this;
+          e || (e = {});
+          let rootElement = $('<div class="hiprint-printTemplate"></div>');
+          // 将数据转换成列表处理，简化代码
+          const dataList = Array.isArray(dataItemOrList) ? dataItemOrList : [dataItemOrList]
+          // 生成参数列表，用于后续递归
+          const paramsListToCreateHTML = []
+          dataList.forEach(function (data, dataIndex) {
+            data && that.printPanels.forEach(function (panel, o) {
+              paramsListToCreateHTML.push([panel, data, e])
+            });
+          });
+
+          function appendElementByParamsList(paramsListToCreateHTML, onFinish) {
+            if (!paramsListToCreateHTML.length) return onFinish();
+            const [panel, data, e] = paramsListToCreateHTML.shift();
+            rootElement.append(panel.getHtml(data, e));
+            // 每次生成Html之间留一些间隔，默认10，通过generateHTMLInterval字段控制
+            console.log('e.generateHTMLInterval', e.generateHTMLInterval)
+            setTimeout(() => appendElementByParamsList(paramsListToCreateHTML, onFinish), e.generateHTMLInterval ?? 10)
+          }
+
+          function onFinish() {
+            delete hinnn._paperList;
+            e && e.imgToBase64 && that.transformImg(rootElement.find("img"));
+            resolve(rootElement)
+          }
+
+          appendElementByParamsList(paramsListToCreateHTML, onFinish);
+        });
       }, t.prototype.getHtml = function (t, e) {
         return t || (t = {}), this.getSimpleHtml(t, e);
+      }, t.prototype.getHtmlAsync = function (t, e) {
+        // 分解生成HTML任务，留下空隙发送socket信息，避免断开连接
+        return t || (t = {}), this.getSimpleHtmlAsync(t, e);
       }, t.prototype.getJointHtml = function (t, e, n) {
         var i = $('<div class="hiprint-printTemplate"></div>'),
           o = [];
@@ -9401,11 +10691,12 @@ var hiprint = function (t) {
         this.editingPanel.zoom(s, p);
       }, t.prototype.addPrintPanel = function (t, e) {
         var n = t ? new pt(new rt(t), this.id) : this.createDefaultPanel();
-        return t && (t.index = this.printPanels.length), e && (this.container.append(n.getTarget()), n.design()), this.printPanels.push(n), e && this.selectPanel(n.index), n;
+        return t && (t.index = this.printPanels.length), e && (this.container.append(n.getTarget()), n.design(this.designOptions)), this.printPanels.push(n), e && this.selectPanel(n.index), n;
       }, t.prototype.selectPanel = function (t) {
         var e = this;
+        if (t > e.printPanels.length - 1) t = e.printPanels.length - 1;
         this.printPanels.forEach(function (n, i) {
-          t == i ? (n.enable(), e.editingPanel = n) : n.disable();
+          t == i ? (n.enable(), e.editingPanel = n, e.printPaginationCreator && e.printPaginationCreator.selectPanel(t)) : n.disable();
         });
       }, t.prototype.deletePanel = function (t) {
         this.printPanels[t].clear(), this.printPanels[t].getTarget().remove(), this.printPanels.splice(t, 1);
@@ -9414,6 +10705,7 @@ var hiprint = function (t) {
       }, t.prototype.createDefaultPanel = function () {
         return new pt(new rt({
           index: this.printPanels.length,
+          name: this.defaultPanelName,
           paperType: "A4"
         }), this.id);
       }, t.prototype.createContainer = function (t) {
@@ -9460,10 +10752,14 @@ var hiprint = function (t) {
           var n = this,
             i = 0,
             o = {},
-            r = $('link[media=print][href*="print-lock.css"]').length > 0 ? $('link[media=print][href*="print-lock.css"]') : [],
+            r = $('link[media=print][href*="print-lock"]'),
             css = '';
           if (e.styleHandler) {
             css += e.styleHandler()
+          }
+          if (r.length <= 0) {
+            throw new Error("请在 入口文件(index.html) 中引入 print-lock.css. 注意: link[media=\"print\"]");
+            return;
           }
           r.each(function (a, p) {
             var s = new XMLHttpRequest();
@@ -9477,7 +10773,7 @@ var hiprint = function (t) {
               }
             }, s.send();
           });
-        } else alert("连接客户端失败");
+        } else alert(`${i18n.__('连接客户端失败')}`);
       }, t.prototype.imageToBase64 = function (t) {
         var e = $(t).attr("src");
         if (-1 == e.indexOf("base64")) try {
@@ -9499,9 +10795,19 @@ var hiprint = function (t) {
       }, t.prototype.sentToClient = function (t, e, n) {
         e || (e = {});
         var i = $.extend({}, n || {});
-        i.imgToBase64 = !0;
-        var o = t + this.getHtml(e, i)[0].outerHTML;
-        i.id = s.a.instance.guid(), i.html = o, i.templateId = this.id, hiwebSocket.send(i);
+        i.imgToBase64 = i.imgToBase64 ?? false;
+        if (i.printByFragments) {
+          // 分批打印
+          this.getHtmlAsync(e, i)
+            .then(rootElement => {
+              var o = t + rootElement[0].outerHTML;
+              i.id = s.a.instance.guid(), i.html = o, i.templateId = this.id, hiwebSocket.sendByFragments(i, n);
+            })
+        } else {
+          // 同步打印
+          var o = t + this.getHtml(e, i)[0].outerHTML;
+          i.id = s.a.instance.guid(), i.html = o, i.templateId = this.id, hiwebSocket.send(i);
+        }
       }, t.prototype.printByHtml = function (t) {
         $(t).hiwprint();
       }, t.prototype.printByHtml2 = function (t, e) {
@@ -9509,7 +10815,11 @@ var hiprint = function (t) {
           var n = this,
             i = 0,
             o = {},
-            r = $("link[media=print]").length > 0 ? $("link[media=print]") : $("link");
+            r = $('link[media=print][href*="print-lock"]');
+          if (r.length <= 0) {
+            throw new Error("请在 入口文件(index.html) 中引入 print-lock.css. 注意: link[media=\"print\"]");
+            return;
+          }
           r.each(function (a, p) {
             var l = new XMLHttpRequest();
             l.open("GET", $(p).attr("href")), l.onreadystatechange = function () {
@@ -9524,7 +10834,7 @@ var hiprint = function (t) {
               }
             }, l.send();
           });
-        } else alert("连接客户端失败");
+        } else alert(`${i18n.__('连接客户端失败')}`);
       }, t.prototype.deletePrintElement = function (t) {
         this.printPanels.forEach(function (e) {
           e.deletePrintElement(t);
@@ -9534,7 +10844,7 @@ var hiprint = function (t) {
         t.map(function (t, n) {
           e.imageToBase64($(n));
         });
-      }, t.prototype.toPdf = function (t, e, n) {
+      }, t.prototype.toPdf = function (t, e, options) {
         var i = this;
         var dtd = $.Deferred();
         var isDownload = true;
@@ -9547,15 +10857,15 @@ var hiprint = function (t) {
               x: 0,
               y: 0,
               useCORS: !0
-            }, n || {}),
+            }, options || {}),
             s = new jsPDF({
               orientation: 1 == this.getOrient(0) ? "portrait" : "landscape",
               unit: "pt",
               format: this.printPanels[0].paperType ? this.printPanels[0].paperType.toLocaleLowerCase() : [r, a]
             }),
-            l = this.getHtml(t, n);
-          if (n && undefined != n.isDownload) {
-            isDownload = n.isDownload
+            l = this.getHtml(t, options);
+          if (options && undefined != options.isDownload) {
+            isDownload = options.isDownload
           }
           this.createTempContainer();
           var u = this.getTempContainer();
@@ -9572,7 +10882,8 @@ var hiprint = function (t) {
               i.removeTempContainer(), e.indexOf(".pdf") > -1 ? s.save(e) : s.save(e + ".pdf");
             } else {
               i.removeTempContainer();
-              var pdfFile = s.output('blob');
+              let type = options.type || 'blob';
+              var pdfFile = s.output(type);
               dtd.resolve(pdfFile);
             }
           });
@@ -9646,12 +10957,28 @@ var hiprint = function (t) {
         return this.printPanels.forEach(function (e) {
           t = t.concat(e.getFieldsInPanel());
         }), t;
-      }, t.prototype.update = function (t) {
+      }, t.prototype.getTestData = function () {
+        var t = {};
+        return this.printPanels.forEach(function (e) {
+          t = Object.assign(t, e.getTestData());
+        }), t;
+      }, t.prototype.update = function (t, idx) {
         var e = this;
         try {
-          if (t && "object" == _typeof(t)) {
-            var temp = new rt(t.panels[0])
-            e.editingPanel.update(temp);
+          if (t && "object" == _typeof(t) && t.panels.length > 0) {
+            var curLen = e.printPanels.length - 1;
+            t.panels.forEach(function(panel, index) {
+              if (index > curLen) {
+                e.printPanels.push(new pt(panel, e.id));
+                var t = e.printPanels[index];
+                e.container.append(t.getTarget()), index > 0 && t.disable(), t.design(e.designOptions);
+                e.printPaginationCreator && e.printPaginationCreator.buildPagination();
+              }
+              var temp = new rt(panel);
+              e.editingPanel = e.printPanels[index];
+              e.editingPanel.update(temp);
+            })
+            e.selectPanel(idx || 0);
           }
         } catch (er) {
           console.log(er);
@@ -9661,7 +10988,7 @@ var hiprint = function (t) {
         var t = this;
         var elements = [];
         // 获取选区元素
-        if (t.editingPanel.mouseRect && t.editingPanel.mouseRect.target) {
+        if (t.editingPanel.mouseRect && t.editingPanel.mouseRect.target && $(".mouseRect").length) {
           elements = t.editingPanel.getElementInRect(t.editingPanel.mouseRect);
         } else { // 获取多选元素
           elements = t.editingPanel.printElements.filter(function (el) {
@@ -9669,7 +10996,38 @@ var hiprint = function (t) {
           })
         }
         return elements
-      }, t.prototype.updateOption = function (option, v) { // 批量更新参数
+      },
+     t.prototype.selectElementsByField = function (fieldsArray){
+            var hiPrintEntity = this
+            var t = $
+            hiPrintEntity.editingPanel.printElements.forEach((e, index) => {
+              if(fieldsArray && fieldsArray.includes(e.options.field)){
+                let designTarget = e.designTarget
+                designTarget.children("div[panelindex]").addClass("selected")
+                designTarget.children().last().css({
+                  display: "block"
+                })
+                designTarget = designTarget[0]
+                t.data(designTarget, "hidraggable").options.onBeforeSelectAllDrag.call(designTarget,{})
+              }
+            })
+          },
+      t.prototype.selectAllElements = function () {
+        var hiPrintEntity = this
+        var t = $
+        hiPrintEntity.editingPanel.printElements.forEach((e, index) => {
+          let designTarget = e.designTarget
+          designTarget.children("div[panelindex]").addClass("selected")
+          designTarget.children().last().css({
+            display: "block"
+          })
+          designTarget = designTarget[0]
+          t.data(designTarget, "hidraggable").options
+            .onBeforeSelectAllDrag
+            .call(designTarget, {})
+        })
+      },
+      t.prototype.updateOption = function (option, v) { // 批量更新参数
         var elements = this.getSelectEls();
         if (elements && elements.length) {
           elements.forEach(function (e) {
@@ -9791,14 +11149,14 @@ var hiprint = function (t) {
             if (t.historyPos > 0) {
               t.historyPos -= 1;
               var cur = t.historyList[t.historyPos];
-              t.update(cur.json, cur.type);
+              t.update(cur.json);
             }
             break;
           case "redo":
             if (t.historyPos < t.historyList.length - 1) {
               t.historyPos += 1;
               var cur = t.historyList[t.historyPos];
-              t.update(cur.json, cur.type);
+              t.update(cur.json);
             }
             break;
           }
@@ -9827,7 +11185,8 @@ var hiprint = function (t) {
   }
 
   function ft(t, e, n) {
-    $.extend({}, t || {}).imgToBase64 = !0;
+    $.extend({}, t || {});
+    t.imgToBase64 = t.imgToBase64 ?? false;
     var i = new ct({});
     i.on("printSuccess", e), i.on("printError", n), i.printByHtml2(this.getHtml(t), t.options);
   }
@@ -9836,29 +11195,44 @@ var hiprint = function (t) {
     var e = void 0;
     return t && t.templates.forEach(function (n, i) {
       var o = $.extend({}, n.options || {});
-      t.imgToBase64 && (o.imgToBase64 = !0), e ? e.append(n.template.getHtml(n.data, o).html()) : e = n.template.getHtml(n.data, o);
+      t.imgToBase64 && (o.imgToBase64 = o.imgToBase64 ?? false), e ? e.append(n.template.getHtml(n.data, o).html()) : e = n.template.getHtml(n.data, o);
     }), e;
   }
 
   function mt(t) {
-    p.a.instance.init(t), p.a.instance.providers.forEach(function (t) {
+    p.a.instance.init(t), p.a.instance.providers && p.a.instance.providers.forEach(function (t) {
       t.addElementTypes(a.instance);
     });
+    if (window.autoConnect && (p.a.instance.host != hiwebSocket.host || p.a.instance.token != hiwebSocket.token)) {
+      hiwebSocket.stop()
+      p.a.instance.host && (hiwebSocket.host = p.a.instance.host);
+      p.a.instance.token && (hiwebSocket.token = p.a.instance.token);
+      hiwebSocket.start()
+    }
+    if (p.a.instance.lang && Object.keys(languages).includes(p.a.instance.lang)) {
+      i18n.lang = p.a.instance.lang;
+    } else {
+      i18n.lang = 'cn'
+    }
   }
 
   function cig(t) {
+    if (hiprint._config == void 0) {
+      hiprint._config = JSON.stringify(window.HIPRINT_CONFIG);
+    }
+    const oldConfig = JSON.parse(hiprint._config);
     if (t) {
       t && Object.keys(t).forEach(function (i) {
         if (i == "optionItems" && t.optionItems && t.optionItems.length) {
           p.a.instance.registerItems(t.optionItems);
         }
-        if (t[i].tabs && t[i].tabs.length) {
+        else if (t[i].tabs && t[i].tabs.length) {
           t[i].tabs.forEach(function (tab, idx) {
             if (tab.replace) {
               $.extend(p.a.instance[i].tabs[idx], tab);
             } else {
-              var options = tab.options, list = p.a.instance[i].tabs[idx].options;
-              options.forEach(function (o) {
+              var options = tab.options || [], list = oldConfig[i].tabs[idx].options;
+              options && options.forEach(function (o) {
                 var idx = list.findIndex(function (e) {
                   return e.name == o.name
                 });
@@ -9880,8 +11254,8 @@ var hiprint = function (t) {
           })
           delete t[i].tabs;
         }
-        if (t[i].supportOptions) {
-          var options = t[i].supportOptions, list = p.a.instance[i].supportOptions;
+        else if (t[i].supportOptions && t[i].supportOptions.length) {
+          var options = t[i].supportOptions, list = oldConfig[i].supportOptions;
           options.forEach(function (o) {
             var idx = list.findIndex(function (e) {
               return e.name == o.name
@@ -9898,11 +11272,17 @@ var hiprint = function (t) {
           })
           $.extend(p.a.instance[i].supportOptions, list);
           delete t[i].supportOptions;
+        } else {
+          var keyMap = {};
+          keyMap[i] = t[i];
+          if (t[i].tabs && t[i].tabs.length == 0) {
+            keyMap[i].supportOptions = oldConfig[i].supportOptions;
+          }
+          $.extend(p.a.instance, keyMap);
         }
-        $.extend(p.a.instance[i], t[i]);
       });
     } else {
-      $.extend(p.a.instance, HIPRINT_CONFIG);
+      $.extend(p.a.instance, JSON.parse(hiprint._config));
     }
   }
 
@@ -9914,6 +11294,18 @@ var hiprint = function (t) {
     p.a.instance.clear("printerList");
     p.a.instance.on("printerList", c);
     hiwebSocket.refreshPrinterList();
+  }
+
+  function getClients(c) {
+    p.a.instance.clear("clients");
+    p.a.instance.on("clients", c);
+    hiwebSocket.getClients();
+  }
+
+  function getClientInfo(c) {
+    p.a.instance.clear("clientInfo");
+    p.a.instance.on("getClientInfo", c);
+    hiwebSocket.getClientInfo()
   }
 
   function getAddr(type, c, ...args) {
@@ -9943,9 +11335,13 @@ var hiprint = function (t) {
   }), n.d(e, "updateElementType", function () {
     return uep;
   }), n.d(e, "hiwebSocket", function () {
-    return hiwebSocket
+    return hiwebSocket;
   }), n.d(e, "refreshPrinterList", function () {
     return rpl;
+  }), n.d(e, "getClients", function() {
+    return getClients;
+  }), n.d(e, "getClientInfo", function() {
+    return getClientInfo;
   }), n.d(e, "getAddress", function () {
     return getAddr;
   }), n.d(e, "ippPrint", function () {

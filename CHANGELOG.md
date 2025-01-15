@@ -1,5 +1,939 @@
 版本及更新记录
 ------------------------------
+### 💐️  GitHub 提交 PR 合并后可自动发布到 npm 仓库;
+### 💐  同时自动更新 GitHub Pages 同步 Gitee;
+### 💐  感谢各位贡献者的支持。 🔥
+
+## 0.0.58 (2024-11-02)
+> 使用此版本 请更新最新的 print-lock.css
+
+> 感谢各位提交 PR 的码友们! 感谢~
+
+> 同时希望各位多看看文档、文章、更新日志;  📢 本页面支持 Ctrl/Command + F 搜索
+
+- 点击 ▶ 可查看详情
+
+<details>
+  <summary>01. 🌈 新增面板排列功能 (横向、纵向 支持间距)</summary>
+
+- 小模板 传数组 铺满 对应纸张
+</details>
+<details>
+  <summary>02. 🌈 新增支持 barcode、qrcode 条码颜色设置</summary>
+
+</details>
+<details>
+  <summary>03. 🌈 新增支持 表格列 条形码/二维码值显示设置</summary>
+
+</details>
+<details>
+  <summary>04. 🌈 新增支持 全选元素API 可批量删除</summary>
+
+hiprintTemplate.selectAllElements();
+</details>
+<details>
+  <summary>05. 🌈 新增支持 根据字段名 选中元素</summary>
+
+hiprintTemplate.selectElementsByField(['name']);
+</details>
+<details>
+  <summary>06. 🌈 新增支持 获取打印机纸张信息 API (客户端^1.0.10)</summary>
+
+> ❗️ node-hiprint-transit 中转暂未添加支持
+
+  ```js
+  // 获取指定打印机纸张信息
+  hiprint.getPaperInfo(printerName);
+  // 获取所有打印机纸张信息
+  hiprint.getPaperInfo();
+
+  // 获取纸张信息方法是异步请求的，没有返回值，你可以使用 hinnn.event.on("paperSizeInfo", () => {}) 监听数据返回
+  hinnn.event.on("paperSizeInfo", (paperSize) => {
+    console.log(paperSize);
+  });
+  // [
+  //   {
+  //       "PrinterName": "Microsoft Print to PDF",
+  //       "TaskNumber": 0, // 打印队列数
+  //       "Status": 0, // 设备状态码
+  //       "StatusMsg": "准备就绪（Ready）", // 设备状态信息
+  //       "PaperSizes": [
+  //           {
+  //               "Height": 1100, // 单位 mm
+  //               "Kind": 1,
+  //               "PaperName": "信纸",
+  //               "RawKind": 1,
+  //               "Width": 850 // 单位 mm
+  //           }
+  //       ]
+  //   }
+  // ]
+  ```> ❗️ node-hiprint-transit 中转暂未添加支持
+
+  ```js
+  // 获取指定打印机纸张信息
+  hiprint.getPaperInfo(printerName);
+  // 获取所有打印机纸张信息
+  hiprint.getPaperInfo();
+
+  // 获取纸张信息方法是异步请求的，没有返回值，你可以使用 hinnn.event.on("paperSizeInfo", () => {}) 监听数据返回
+  hinnn.event.on("paperSizeInfo", (paperSize) => {
+    console.log(paperSize);
+  });
+  // [
+  //   {
+  //       "PrinterName": "Microsoft Print to PDF",
+  //       "TaskNumber": 0, // 打印队列数
+  //       "Status": 0, // 设备状态码
+  //       "StatusMsg": "准备就绪（Ready）", // 设备状态信息
+  //       "PaperSizes": [
+  //           {
+  //               "Height": 1100, // 单位 mm
+  //               "Kind": 1,
+  //               "PaperName": "信纸",
+  //               "RawKind": 1,
+  //               "Width": 850 // 单位 mm
+  //           }
+  //       ]
+  //   }
+  // ]
+  ```
+</details>
+<details>
+  <summary>07. 🌈 新增支持 print2支持分批打印（需客户端 v1.0.11）</summary>
+
+支持单模版大单据量连续打印 @george-hong ([#138](https://github.com/CcSimple/vue-plugin-hiprint/pull/138))
+  ```js
+  hiprintTemplate.print2(printDataList, {
+    printer: '打印机名称',
+    title: '打印标题',
+    printByFragments: true,   // 是否需要分批打印，分批打印能够支持连续打印大量数据，但会增加打印所需时间
+    generateHTMLInterval: 30, // 多条数据生成HTML的间隔，单位ms，默认10
+    fragmentSize: 10000,  // 分片字符长度，默认50000
+    sendInterval: 20, // 分片传输间隔，单位ms，默认10
+  })
+  ```
+</details>
+<details>
+  <summary>08. ✨ 调整优化 text、barcode 类型条码自动增加宽度优化</summary>
+
+</details>
+<details>
+  <summary>09. ✨ 调整优化 text条形码: 支持设置条码文本模式: 单独文本、svg文本</summary>
+
+</details>
+<details>
+  <summary>10. ✨ 调整优化 API 更新元素时 属性同步</summary>
+
+</details>
+<details>
+  <summary>11. ✨ 调整优化 缩放时 框选框 移动偏差问题</summary>
+
+</details>
+<details>
+  <summary>12. ✨ 调整优化 分组头/脚函数 自动判断return是否包含 tr、td</summary>
+
+</details>
+<details>
+  <summary>13. ✨ 调整优化 hiprint.setConfig API</summary>
+
+- 支持隐藏参数分组
+- 隐藏部分参数分组
+</details>
+<details>
+  <summary>14. ✨ 调整优化 update 更新模板时 尺寸跟着改变</summary>
+
+</details>
+<details>
+  <summary>15. ✨ 调整优化 静默打印 图片默认不转 base64</summary>
+
+</details>
+<details>
+  <summary>16. ✨ 调整优化 表格 分组序号 支持续编</summary>
+
+</details>
+<details>
+  <summary>17. ⚠️  修改 print2 打印成功回调事件为 <b>success</b></summary>
+
+项目初始时 print2 打印成功回调事件即为 `successs` 事件 (手抖多打了个 s)，electron-hiprint v1.0.8 重构关键代码时发现了该问题，为了标准及向下兼容，同时保留了 `succsss` 和 `success` 事件，经过 8 个多月的过渡期，现统一改为 `success` ，该改动仅对 electron-hiprint 1.0.7 及以前的客户端版本造成破坏性更新，后续版本无影响，我们也推荐大家及时更新至 1.0.11 以后的版本，体验更多优秀的功能。
+</details>
+<details>
+  <summary>18. 🐛✨🐛✨🐛✨🐛 其他修复或优化见详情(或见 git history)</summary>
+
+- 修复选择图片后refresh方法参数real属性无效，以及回调函数可能不会执行的问题
+- i18n相关修复优化
+- fix: 修复复制元素自动聚焦的bug
+- 将图片的缩放控制点从[se,r]改为[s,e,se,r] (#98)
+- 修复双击文本出现冒号的bug (#102)
+- fix #104 修复表格中存在多列rowSpan时多页rowSpan错误
+- 修复表格分页colspan问题
+- fix: 修复新添加的条形码/二维码元素-左右对齐参数不生效的问题
+- add 表格添加 colgroup 解决分页不显示表头时列宽各种问题
+- fix 表格 样式参数设置不生效的 bug
+- fix 表格里面当字段类型为图片时，单元格高度设置无效BUG修复，并设置最小高度避免表单高度计算失败
+</details>
+
+
+
+## 0.0.57-beta28(2024-08-10)
+**⚠️⚠️⚠️ 有限的破坏性更新 Breaking changes**
+<details>
+  <summary>01. 🌈 新增支持 print2支持分批打印（需客户端 v1.0.11）</summary>
+
+  支持单模版大单据量连续打印 @george-hong ([#138](https://github.com/CcSimple/vue-plugin-hiprint/pull/138))
+  ```js
+  hiprintTemplate.print2(printDataList, {
+    printer: '打印机名称',
+    title: '打印标题',
+    printByFragments: true,   // 是否需要分批打印，分批打印能够支持连续打印大量数据，但会增加打印所需时间
+    generateHTMLInterval: 30, // 多条数据生成HTML的间隔，单位ms，默认10
+    fragmentSize: 10000,  // 分片字符长度，默认50000
+    sendInterval: 20, // 分片传输间隔，单位ms，默认10
+  })
+  ```
+</details>
+
+<details>
+  <summary>02. ⚠️  修改 print2 打印成功回调事件为 <b>success</b></summary>
+
+  项目初始时 print2 打印成功回调事件即为 `successs` 事件 (手抖多打了个 s)，electron-hiprint v1.0.8 重构关键代码时发现了该问题，为了标准及向下兼容，同时保留了 `succsss` 和 `success` 事件，经过 8 个多月的过渡期，现统一改为 `success` ，该改动仅对 electron-hiprint 1.0.7 及以前的客户端版本造成破坏性更新，后续版本无影响，我们也推荐大家及时更新至 1.0.11 以后的版本，体验更多优秀的功能。
+</details>
+
+## 0.0.57-beta27(2024-07-30)
+<details>
+  <summary>01. 🐛️ fix 表格字段为图片，单元格高度无效修复</summary>
+
+  表格里面当字段类型为图片时，单元格高度设置无效 BUG 修复，并设置最小高度避免表单高度计算失败 @zhmlsj ([#131](https://github.com/CcSimple/vue-plugin-hiprint/pull/131))
+</details>
+
+## 0.0.57-beta26(2024-07-11)
+<details>
+  <summary>01. ✨ 调整优化 水印 打印无需在浏览器预览勾选背景图案</summary>
+
+  需要支持 [-webkit-print-color-adjust](https://caniuse.com/?search=-webkit-print-color-adjust) 样式 @Xavier ([#129](https://github.com/CcSimple/vue-plugin-hiprint/pull/129))
+</details>
+
+## 0.0.57-beta25(2024-07-10)
+<details>
+  <summary>01. ✨ 调整优化 setConfig API & 支持隐藏全部/部分参数分组</summary>
+
+  详细使用查看 demo
+</details>
+
+## 0.0.57-beta23(2024-05-17)
+<details>
+ <summary>01. 🌈 新增支持 添加 selectElementsByField 属性，通过传入field的字符串数组选中文本类型的元素</summary>
+
+@xiaolonggee ([#123](https://github.com/CcSimple/vue-plugin-hiprint/pull/123))
+```js
+  hiprintTemplate.selectElementsByField(['name'])
+```
+![选中field为name的字段](./res/selectElementsByField.png)
+</details>
+
+## 0.0.57-beta22(2024-05-13)
+
+<details>
+  <summary>01. ✨ 调整优化 text、barcode 类型条码自动增加宽度优化 </summary>
+
+  经过一段时间的测试及实验，找到了 [JsBarcode](https://github.com/lindell/JsBarcode) 与 [bwip-js](https://github.com/metafloor/bwip-js) 两个库实现条码宽度自动增加的较优方案。（感谢Q群用户 【︶ㄣ夏＾熟 。】的测试）
+
+  现在你可以在 text[textType='barcode']、barCode 元素中设置 barAutoWidth 属性，使条码以渲染时 svg 提供的最小尺寸自动增加宽度。
+
+  > 0.0.57-beta20 版本中 条码宽度 = svg宽度 * 1.2，该倍率不是很合理，在此版本中修改为 1.05
+</details>
+<details>
+  <summary>02. ✨ 调整优化 模版中心预览图片资源调整</summary>
+</details>
+
+## 0.0.57-beta20(2024-03-19)
+
+<details>
+  <summary>01. 🌈 新增支持 添加 barWidth、barAutoWidth 属性 </summary>
+
+  > ❗️ 表格中的条码暂未添加这两个属性，待测试验证后在添加
+
+  关于条码(barCode)，无论是 text[textType='barcode'] 元素还是 0.0.56 新添加的 barCode 元素，一直都有人反馈存在扫码枪无法识别的问题，关于这一问题近期深入研究了一下，以下是对该问题出现原因的猜测：
+
+  > 插件在使用 [JsBarcode](https://github.com/lindell/JsBarcode) 这个库生成条码时 [#L1972](https://github.com/CcSimple/vue-plugin-hiprint/blob/a3cdd93e6101c202bb55e23ce86028228d0687a3/src/hiprint/hiprint.bundle.js#L1972) 设置了 width 属性为 1，而生成的条码 svg 又宽度自适应为元素宽度，当元素宽度小于条码包所生成的 svg 宽度时，width 属性实际低于 1，导致扫码枪无法正常识别。
+
+  > 另外也有可能是元素、面板被设置了缩放，导致整体元素尺寸变小，导致条码单位宽度 width 小于 1。
+
+  > 浏览器打印预览的缩放也有可能导致这一问题的产生。
+
+  所以为此我们添加了 barWidth、barAutoWidth 两个属性，旨在解决这一问题。
+
+    1. 你可以通过设置 barWidth 以调整 text[textType='barcode'] 的单条宽度，以适应不同尺寸的需求（建议的值为 1）。
+
+    2. 同时也可以通过设置 barAutoWidth 使条码在渲染时以 svg 提供的最小尺寸自动增加宽度。
+     - 小于渲染最小尺寸时将自动增加宽度以保障扫码识别
+     - 大于此尺寸时不进行任何操作
+     - svg 最小尺寸与 barWidth 有密切关系
+
+  另外以 [bwip-js](https://github.com/metafloor/bwip-js) 渲染的条码 barCode 元素不支持设置单条宽度，它接收元素 width、height 后会自动渲染，还提供了一个 scale 的参数，用于控制渲染比例（bwip-js对于width这块的描述看了几遍没看懂），为了方便也复用了 barWidth 这个属性，通过改变 barWidth 也能调整条码的识别成功率。
+
+    写在最后：
+    关于条码无法正确识别问题，以上猜测和添加的属性欢迎大家积极测试和讨论，如有不对的地方欢迎指正。
+
+</details>
+
+## 0.0.57-beta18(2024-03-09)
+
+<details>
+  <summary>01. 🌈 新增支持 获取打印机纸张信息 Beta ❗️ </summary>
+
+  当客户端运行在 window 系统环境时可以获取打印机纸张信息，你需要自行拉取最新客户端代码[electron-hiprint](https://github.com/CcSimple/electron-hiprint)，自行构建最新版本(v1.0.10)
+
+  > ❗️ node-hiprint-transit 中转暂未添加支持
+
+  ```js
+  // 获取指定打印机纸张信息
+  hiprint.getPaperInfo(printerName);
+  // 获取所有打印机纸张信息
+  hiprint.getPaperInfo();
+
+  // 获取纸张信息方法是异步请求的，没有返回值，你可以使用 hinnn.event.on("paperSizeInfo", () => {}) 监听数据返回
+  hinnn.event.on("paperSizeInfo", (paperSize) => {
+    console.log(paperSize);
+  });
+  // [
+  //   {
+  //       "PrinterName": "Microsoft Print to PDF",
+  //       "TaskNumber": 0, // 打印队列数
+  //       "Status": 0, // 设备状态码
+  //       "StatusMsg": "准备就绪（Ready）", // 设备状态信息
+  //       "PaperSizes": [
+  //           {
+  //               "Height": 1100, // 单位 mm
+  //               "Kind": 1,
+  //               "PaperName": "信纸",
+  //               "RawKind": 1,
+  //               "Width": 850 // 单位 mm
+  //           }
+  //       ]
+  //   }
+  // ]
+  ```
+</details>
+
+## 0.0.57-beta17(2024-03-08)
+
+<details>
+  <summary>01. ✨ 调整优化 表格添加 colgroup 解决列宽跨页不齐问题 </summary>
+</details>
+<details>
+  <summary>02. ✨ 调整优化 表格分组头、脚格式化函数自动判断 tr、td 包裹 </summary>
+  现在你可以直接 return content 内容、td(s) 字符串、tr(s) 字符串，插件将自动检测是否包裹 td、tr 标签，自动补全代码
+</details>
+
+## 0.0.57-beta9
+
+<details>
+  <summary>01. 🌈 新增支持 模版 控制元素是否可超出面板 </summary>
+
+  ```js
+  new hiprint.PrintTemplate({
+    template: panel,
+    willOutofBounds: true, // 是否允许组件内的控件超出范围
+  })
+  ```
+</details>
+<details>
+  <summary>02. 🌈 新增支持 拖拽元素 生成 类 QT Designer 唯一 field  </summary>
+
+  ```js
+  new hiprint.PrintTemplate({
+    template: panel,
+    qtDesigner: true, // 是否开启类似QT Designer的唯一field生成模式
+  })
+  ```
+  ```json
+  {
+    "options": {
+      // ... 省略其他属性 ...
+      "field": "textType",
+      "title": "单据类型",
+      "qid": "textType_1", // 唯一 id
+      // ... 省略其他属性 ...
+    },
+    "printElementType": {
+      "title": "单据类型",
+      "type": "text"
+    }
+  }
+  ```
+</details>
+<details>
+  <summary>03. ✨ 调整优化 bwip 条码、二维码 填充色统一 </summary>
+
+  > 设置移入 样式面板 => "条码颜色"
+
+  ```json
+  {
+    "options": {
+      "barColor": "#000", // 条码、二维码 填充颜色
+    }
+  }
+  ```
+</details>
+<details>
+  <summary>04. 🐛️ fix 面板缩放后 框选框不跟鼠标问题 </summary>
+</details>
+
+## 0.0.57-beta8
+<details>
+  <summary>01. 🌈 新增支持 添加全选 api </summary>
+
+  ```js
+  const template = new hiprint.PrintTemplate({
+    template: panel,
+  })
+
+  template.selectAllElements()
+  ```
+</details>
+
+## 0.0.57-beta3
+<details>
+  <summary>01. 🌈 新增支持 近期社区 pr 部分中文 i18n 机翻 </summary>
+</details>
+<details>
+  <summary>02. ✨ 调整优化 条形码、二维码，增强条形码、二维码优化 </summary>
+
+  1. 基础条形码 标题 改为在元素容器内显示
+  2. 基础二维码 添加 标题
+  3. 增强条形码、二维码 标题 改为在元素容器内显示
+  4. 优化增强二维码始终显示为正方形，防止变形
+  5. 增强二维码添加 eclevel(容错率) 设置
+  6. 优化 resize 控制点
+</details>
+<details>
+  <summary>03. 🐛️ fix 修复表格空间不够分页显示错误信息无法正确i18n显示问题 </summary>
+</details>
+
+## 0.0.56 (2023-11-19)
+> 使用此版本 请更新最新的 print-lock.css
+
+- 点击 ▶ 可查看详情
+
+<details>
+  <summary>01. 🌈 新增支持 条形码、二维码独立元素，使用 bwip-js 库生成 svg </summary>
+
+  - 解决原 text 元素中的条形码、二维码 类型不全，生成条码、二维码不清晰的问题
+</details>
+<details>
+  <summary>02. 🌈 新增支持 元素参数 国际化 i18n </summary>
+
+  - 原生为简体中文，英语、德语、西班牙语、法语、意大利语、日语、俄语、繁体中文皆为 AI 机翻，欢迎帮助 [订正](https://github.com/CcSimple/vue-plugin-hiprint/tree/main/src/i18n)。
+
+```js
+hiprint.init({
+  lang: 'en', // 设置语言 ['cn', 'en', 'de', 'es', 'fr', 'it', 'ja', 'ru', 'cn_tw']
+});
+```
+</details>
+<details>
+  <summary>03. 🌈 新增支持 中转服务 node-hiprint-transit </summary>
+
+[中转服务 node-hiprint-transit](https://github.com/Xavier9896/node-hiprint-transit)
+
+  ```js
+  import { hiprint } from 'vue-plugin-hiprint'
+
+  hiprint.init({
+      host: 'https://printjs.cn:17521', // 此处输入服务启动后的地址
+      token: 'vue-plugin-hiprint',     // 用于鉴权的token
+  });
+
+  // or
+
+  hiwebSocket.setHost("https://printjs.cn:17521", "vue-plugin-hiprint")
+
+  console.log(hiwebSocket.clients, hiwebSocket.printerList)
+
+  // 中转服务专有的 api，可获取所有连接中转服务的客户端 v1.0.7
+  hiprint.getClients()
+  hiwebSocket.getClients()
+  // 监听数据返回
+  hinnn.event.on("clientInfo", (clients) => {
+    console.log(clients);
+  });
+  ```
+详情转至 [文档说明](./README.md#使用-中转服务-node-hiprint-transit-实现代理)
+</details>
+<details>
+  <summary>04. 🌈 新增支持 客户端信息获取(需客户端^1.0.7)</summary>
+
+原本你可以通过 hiprint.getAddress 或 hiwebSocket.getAddress 获取客户端的 ip、ipv6、mac、dns、all、interface、vboxnext 信息，但是需要你主动调用方法去获取。
+
+在 v1.0.7 中我们仍然保留该方式，但移除了用处不大的 dns、interface、vboxnext 类型，同时在连接成功后自动返回客户端 clientInfo 信息
+
+```js
+// 手动获取方法
+hiprint.getClientInfo()
+// or
+hiwebSocket.getClientInfo()
+
+// 监听数据返回
+hinnn.event.on("clientInfo", (clientInfo) => {
+  console.log(clientInfo);
+});
+
+console.log(hiwebSocket.clientInfo)
+{
+  arch: "x64",
+  clientUrl: "http://192.168.0.2:17521",
+  ip: "192.168.0.2",
+  ipv6: "fe80::13f:eb0f:e426:7c92",
+  mac: "a1:a2:a3:a4:a5:a6",
+  machineId: "12c90ff9-b9f4-4178-9099-9dd326b70c2e",
+  platform: "win32",
+  printerList: [{
+    description: "",
+    displayName: "Microsoft Print to PDF",
+    isDefault: true,
+    name: "Microsoft Print to PDF",
+    options: {,
+      "printer-location": "",
+      "printer-make-and-model": "Microsoft Print To PDF",
+      "system_driverinfo": "Microsoft Print To PDF;10.0.19041.3570 (WinBuild.160101.0800);Microsoft® Windows® Operating System;10.0.19041.3570"
+    },
+    status: 0
+  }, {…}, {…}, {…}, {…}, {…}],
+  version: "1.0.7",
+}
+```
+</details>
+<details>
+  <summary>05. 🌈 新增支持 底部聚合格式化函数 tableSummaryFormatter </summary>
+</details>
+<details>
+  <summary>06. 🌈 新增支持 表格支持设置测试数据 设计时可设置模拟数据 </summary>
+</details>
+<details>
+  <summary>07. ✨ 调整优化 分组表格头/脚函数 返回更多参数,不再局限于td标签内</summary>
+</details>
+<details>
+  <summary>08. 🐛️ fix 表格最后列(多行表头时) 左边框不显示问题</summary>
+</details>
+<details>
+  <summary>09. 🐛️ fix 修复表格脚计数 将分组头、脚 计算入内的bug</summary>
+</details>
+<details>
+  <summary>10. 🐛️ fix 表格脚设置最后显示，前面分页的页脚位置占位空白</summary>
+</details>
+<details>
+  <summary>11. 🐛️ fix 参数字体大小问题、标尺img max-width 问题(样式问题)</summary>
+</details>
+<details>
+  <summary>12. 🐛️ fix 参数栏删除按钮未触发数据更新问题</summary>
+</details>
+<details>
+  <summary>13. 🐛️ fix 更新多面板模板时, 其他面板点击元素 属性渲染问题</summary>
+</details>
+<details>
+  <summary>14. 🐛️ fix 更新模板json 水印未更新的 bug</summary>
+</details>
+<details>
+  <summary>15. 🐛️ fix 表格合并列后无法自动撑满整个表格容器</summary>
+</details>
+<details>
+  <summary>16. 🐛️ fix 空白表格 卡死bug</summary>
+</details>
+
+## 0.0.55-beta14
+<details>
+  <summary>01. 🌈 新增支持 中转服务 node-hiprint-transit</summary>
+
+  [中转服务 node-hiprint-transit](https://github.com/Xavier9896/node-hiprint-transit)
+
+  ```js
+  import { hiprint } from 'vue-plugin-hiprint'
+
+  hiprint.init({
+      host: 'https://printjs.cn:17521', // 此处输入服务启动后的地址
+      token: 'vue-plugin-hiprint',     // 用于鉴权的token
+  });
+
+  // or
+
+  hiwebSocket.setHost("https://printjs.cn:17521", "vue-plugin-hiprint")
+
+  console.log(hiwebSocket.clients, hiwebSocket.printerList)
+
+  // 中转服务专有的 api，可获取所有连接中转服务的客户端 v1.0.7
+  hiprint.getClients()
+  hiwebSocket.getClients()
+  ```
+  详情转至 [文档说明](./README.md#使用-中转服务-node-hiprint-transit-实现代理)
+</details>
+<details>
+  <summary>02. 🌈 新增支持 客户端信息获取</summary>
+
+原本你可以通过 hiprint.getAddress 或 hiwebSocket.getAddress 获取客户端的 ip、ipv6、mac、dns、all、interface、vboxnext 信息，但是需要你主动调用方法去获取。
+
+在 v1.0.7 中我们仍然保留该方式，但移除了用处不大的 dns、interface、vboxnext 类型，同时在连接成功后自动返回客户端 clientInfo 信息
+
+```js
+// 手动获取方法
+hiprint.getClientInfo()
+// or
+hiwebSocket.getClientInfo()
+```
+```js
+console.log(hiwebSocket.clientInfo)
+
+{
+  arch: "x64",
+  clientUrl: "http://192.168.0.2:17521",
+  ip: "192.168.0.2",
+  ipv6: "fe80::13f:eb0f:e426:7c92",
+  mac: "a1:a2:a3:a4:a5:a6",
+  machineId: "12c90ff9-b9f4-4178-9099-9dd326b70c2e",
+  platform: "win32",
+  printerList: [{
+    description: "",
+    displayName: "Microsoft Print to PDF",
+    isDefault: true,
+    name: "Microsoft Print to PDF",
+    options: {,
+      "printer-location": "",
+      "printer-make-and-model": "Microsoft Print To PDF",
+      "system_driverinfo": "Microsoft Print To PDF;10.0.19041.3570 (WinBuild.160101.0800);Microsoft® Windows® Operating System;10.0.19041.3570"
+    },
+    status: 0
+  }, {…}, {…}, {…}, {…}, {…}],
+  version: "1.0.7",
+}
+```
+</details>
+
+## 0.0.55-beta8(2023-09-12)
+<details>
+  <summary>01. 🌈 新增支持 国际化 i18n </summary>
+
+原生为简体中文，英语、德语、西班牙语、法语、意大利语、日语、俄语、繁体中文皆为 AI 机翻，欢迎帮助 [订正](https://github.com/CcSimple/vue-plugin-hiprint/tree/main/src/i18n)。
+
+```js
+hiprint.init({
+  lang: 'en', // 设置语言 ['cn', 'en', 'de', 'es', 'fr', 'it', 'ja', 'ru', 'cn_tw']
+});
+```
+</details>
+
+## 0.0.55-beta5(2023-09-06)
+<details>
+  <summary>01. ✨ 调整优化 与打印服务链接添加 token 可选项</summary>
+该功能需要 v1.0.7 之后的 <a href="https://gitee.com/CcSimple/electron-hiprint/releases">客户端(electron-hiprint)</a> 配合使用
+
+```js
+// 无需自定义 token
+hiprint.hiwebSocket.setHost('http://localhost:17521',(connected, e) => {
+  console.log('connected', connected);
+  console.log('e', e);
+})
+
+// 添加自定义 token
+hiprint.hiwebSocket.setHost('http://localhost:17521', 'token',(connected, e) => {
+  console.log('connected', connected);
+  console.log('e', e);
+})
+```
+</details>
+<details>
+  <summary>02. ✨ 调整优化 hiprint.init 初始化 可以传入 host 、token</summary>
+
+```js
+hiprint.init({
+  providers: [provider.f],
+  host: 'http://localhost:17521', // 可在此处设置连接地址与端口号
+  token: 'token' // 可在此处设置连接 token
+});
+```
+</details>
+
+## 0.0.55-beta3(2023-08-16)
+<details>
+  <summary>01. 🌈 新增支持 条形码、二维码独立元素，使用 bwip-js 库生成 svg </summary>
+解决原 text 元素中的条形码、二维码 类型不全，生成条码、二维码不清晰的问题
+</details>
+
+## 0.0.54 (2023-07-05)
+**⚠️⚠️⚠️ 破坏性更新 Breaking changes**
+> ⚠️ 使用此版本 请更新最新的 print-lock.css
+<details>
+  <summary>01. 🌈 新增支持 文本换行参数(不换行、隐藏、省略)</summary>
+</details>
+<details>
+  <summary>02. 🌈 新增支持 多面板/批量打印 页码续排/重排 选项</summary>
+</details>
+<details>
+  <summary>03. 🌈 新增支持 多面板选中回调 onSelectPanel 使用场景：当选择回调的时候刷新相关界面设置。</summary>
+
+```javascript
+hinnn.event.clear("onSelectPanel");
+hinnn.event.on("onSelectPanel", (panel, index, li) => {
+  console.log("onSelectPanel", panel, index, li);
+});
+```
+</details>
+<details>
+  <summary>04. ✨ 调整优化 toPdf 支持导出 指定类型(blob、bloburi、dataurl等)见 demo 示例</summary>
+</details>
+<details>
+  <summary>05. ✨ 调整优化 当表格某一行数据超出最大分页高度时, 无限循环卡死问题(同时给出提示)</summary>
+</details>
+<details>
+  <summary>06. ✨ 调整优化 行/列合并函数 回调新增 tableData, printData</summary>
+</details>
+<details>
+  <summary>07. ✨ 调整优化 表格表头 边框参数</summary>
+</details>
+<details>
+  <summary>08. ✨ 调整优化 旋转角度, input类型为number</summary>
+</details>
+<details>
+  <summary>09. ✨ 调整优化 文本 上下对齐 参数(改用 grid 实现)</summary>
+</details>
+<details>
+  <summary>10. ✨ 调整优化 图片元素 显示 隐藏规则 参数</summary>
+</details>
+<details>
+  <summary>11. 🐛️ fix 缩放后 撤销/重做 再点击元素位置跳动问题</summary>
+</details>
+<details>
+  <summary>12. 🐛️ fix setConfig 参数不生效 bug</summary>
+</details>
+<details>
+  <summary>13. 🐛️ fix 聚合函数 最大/小值 显示 Infinity 问题</summary>
+</details>
+
+## 0.0.52 (2023-05-08)
+<details>
+  <summary>1. 🌈 新增支持 表格设置"每页最大行数"功能</summary>
+</details>
+<details>
+  <summary>2. 🌈 新增支持 双击"格式化函数"等, 填充placeholder</summary>
+</details>
+<details>
+  <summary>3. 🌈 新增支持 "底部聚合合并列数"参数,实现自定义合并列</summary>
+</details>
+<details>
+  <summary>4. ✨ 调整优化 分页规则:不分页时, 移除thead,tfoot. 直接插入到tbody</summary>
+</details>
+<details>
+  <summary>5. ✨ 调整优化 默认provider 新增defaultModule.emptyTable</summary>
+</details>
+<details>
+  <summary>6. 🐛️ fix 框选框 点击时跳位的问题</summary>
+</details>
+<details>
+  <summary>7. 🐛️ fix updateElementType 错误</summary>
+</details>
+<details>
+  <summary>8. 🐛️ fix 设计时 清空水印内容 水印未销毁问题</summary>
+</details>
+<details>
+  <summary>9. 🐛️ fix 行/列合并函数 placeholder 错误</summary>
+</details>
+<details>
+  <summary>10. 🐛️ fix provider 配置表格列,样式函数等参数是函数时,默认getJson未返回其值的问题</summary>
+</details>
+
+## 0.0.50 (2023-03-31)
+<details>
+  <summary>1. 🌈️ 新增支持 水印功能</summary>
+
+```javascript
+let json = {
+    panels:[
+      // 面板设置 水印参数
+      // 更多参数可查看本项目 src/hiprint/plugins/watermark.js
+      "watermarkOptions": {
+        "content": "vue-plugin-hiprint",
+          "rotate": 25,
+          "timestamp": true,
+          "format": "YYYY-MM-DD HH:mm"
+      },
+    ]
+}
+```
+</details>
+<details>
+  <summary>2. ✨ 调整优化 多行表头字段渲染问题</summary>
+</details>
+<details>
+  <summary>3. ✨ 调整优化 表头合并问题</summary>
+</details>
+<details>
+  <summary>4. ✨ 调整优化 表格列 部分参数返回默认值问题(getJson不需要返回的值)</summary>
+</details>
+<details>
+  <summary>5. ✨ 调整优化 支持撤销重做 调整表头/调整列字段 操作</summary>
+</details>
+<details>
+  <summary>6. ✨ 调整优化 "行/列合并函数" 添加"rowIndex" 行下标回调</summary>
+</details>
+<details>
+  <summary>7. 🐛️ fix 当有"行/列合并函数" 设置表体行高无效问题</summary>
+</details>
+<details>
+  <summary>8. 🐛️ fix "行/列合并函数" 分页列缺少/塌陷问题 并支持设置 分页是否清除合并内容</summary>
+</details>
+<details>
+  <summary>9. 🐛️ fix tableColumn 参数多次提交问题</summary>
+</details>
+
+## 0.0.48 (2023-03-09)
+<details>
+  <summary>1. ✨ 调整优化 setHost 支持回调</summary>
+
+```javascript
+hiprint.hiwebSocket.setHost('http://localhost:17521',(connected, e) => {
+  console.log('connected', connected);
+  console.log('e', e);
+})
+```
+</details>
+<details>
+  <summary>2. ✨ 调整优化 参数 draggable:false 时，不显示删除按钮</summary>
+</details>
+<details>
+  <summary>3. ✨ 调整优化 design 网格线支持多面板</summary>
+</details>
+<details>
+  <summary>4. 🐛️ fix 竖线无法旋转 bug</summary>
+</details>
+<details>
+  <summary>5. 🐛️ fix hiprint.init error</summary>
+</details>
+
+## 0.0.46 (2023-02-23)
+<details>
+  <summary>01. 🌈️ 新增支持 多面板名称自定义功能(创建模板添加 "onPanelAddClick" 和 "defaultPanelName" 属性)</summary>
+
+```javascript
+let hiprintTemplate = new hiprint.PrintTemplate({
+  template: {},
+  settingContainer: '#PrintElementOptionSetting',
+  paginationContainer: '.hiprint-printPagination',
+  defaultPanelName: '默认面板名称', // 默认面板名称(当面板没有 name 属性时)
+  onPanelAddClick: (panel, createPanel) => {
+    // 修改名称, 可以弹出输入框, 也可以直接修改
+    panel.name = '新面板' + (panel.index+1);
+    // 记得 调用 createPanel 创建面板
+    createPanel(panel);
+  },
+});
+```
+</details>
+<details>
+  <summary>02. 🌈️ 新增支持 吸附线功能 && 优化调整吸附功能 支持设置 吸附阈值等 adsorbMin、showAdsorbLine、adsorbLineMin</summary>
+
+```javascript
+hiprint.setConfig({
+  adsorbMin: 3, //吸附最小距离pt
+  showAdsorbLine: true, //显示吸附线
+  adsorbLineMin: 6, //吸附线显示最小距离pt
+})
+```
+</details>
+<details>
+  <summary>03. 🌈️ 新增支持 table 分组字段函数 和 分组头/脚格式化函数</summary>
+
+```javascript
+{
+    options: {
+      // 分组统计字段
+      groupFieldsFormatter: function(groupData,options) {
+          return ["name"];
+      }
+      // 分组表头
+      groupFormatter: function(groupData,options) {
+          return '<td></td>';
+      }
+      // 分组表脚
+      groupFooterFormatter: function(groupData,options) {
+          return '<td></td>';
+      }
+    }
+}
+```
+</details>
+<details>
+  <summary>04. 🌈️ 新增支持 design 显示网格 -> design('#id',{ grid: true })</summary>
+
+```javascript
+let hiprintTemplate = new hiprint.PrintTemplate({
+  template: {},
+  settingContainer: '#PrintElementOptionSetting',
+});
+hiprintTemplate.design('#id',{ grid: true });
+```
+</details>
+<details>
+  <summary>05. 🌈️ 新增支持 模板获取测试数据Api getTestData</summary>
+</details>
+<details>
+  <summary>06. 🌈 新增支持 表格列 表格头样式函数 @PromiseAll</summary>
+</details>
+<details>
+  <summary>07. ✨ 调整优化 update功能,支持更新多面板,并选中默认面板 eg: update({},1)</summary>
+</details>
+<details>
+  <summary>08. ✨ 调整优化 更改纸张大小时,按比例设置页脚线高度</summary>
+</details>
+<details>
+  <summary>09. ✨ 调整优化 双击编辑文本时 hover 显示问题</summary>
+</details>
+<details>
+  <summary>10. ✨ 调整优化 多面板 样式美化</summary>
+</details>
+<details>
+  <summary>11. 🐛️ fix 多表格 并排问题</summary>
+</details>
+<details>
+  <summary>12. 🐛️ fix 页眉线/页尾线 宽度问题</summary>
+</details>
+<details>
+  <summary>13. 🐛️ fix 多选元素 拖拽未选中元素 bug</summary>
+</details>
+<details>
+  <summary>14. 🐛️ fix 元素旋转 缩放后 点击跳动问题</summary>
+</details>
+<details>
+  <summary>15. 🐛️ fix 框选时遇hover停滞问题</summary>
+</details>
+<details>
+  <summary>16. 🐛️ fix 其他一些已知小bug</summary>
+</details>
+
+## 0.0.44 (2023-01-18)
+<details>
+  <summary>1. 🌈️  选中元素新增删除按钮</summary>
+</details>
+<details>
+  <summary>2. ✨ 调整优化 页码格式 支持 ${paperNo+1} 增量页码</summary>
+</details>
+<details>
+  <summary>3. ✨ 调整优化 新拖拽元素宽高大小显示</summary>
+</details>
+<details>
+  <summary>4. ✨ 调整优化 hover元素时显示删除按钮及宽高大小</summary>
+</details>
+<details>
+  <summary>5. ✨ 调整优化 当图片元素没设置宽高时,获取宽高大小</summary>
+</details>
+<details>
+  <summary>6. ✨ 调整优化 常见错误 Error 中文提示; 如 tableCustom</summary>
+</details>
+<details>
+  <summary>7. 🐛️ fix 框选后 getSelectEls 无法获取选中元素 bug</summary>
+</details>
+<details>
+  <summary>8. 🐛️ fix table 设置表体行高 自动填充 bug</summary>
+</details>
+
 ## 0.0.40 (2022-12-26)
 <details>
   <summary>1. 🌈️  新增支持 文本、表格聚合添加「转大小写」功能 同时提供 hinnn.toUpperCase 方法</summary>
@@ -76,6 +1010,7 @@ function(value,row,index,options) {
 </details>
 
 ## 0.0.36 (2022-10-10)
+**⚠️⚠️⚠️ 破坏性更新 Breaking changes**
 <details>
   <summary>1. ⚠️  移除 'tableCustom' 元素 'table' 默认可编辑,插入 </summary>
 </details>
@@ -640,3 +1575,77 @@ text元素修改为barcode/qrcode时调整控制按钮
 从右侧参数栏快速从右往左选择时鼠标移动到design内时框选框的大小问题
 ```
 </details>
+
+## 0.0.23 (2022-06-15) 之前已调整优化部分
+
+- [x] `vue 插件` 发布npm包,方便直接使用
+- [x] `Ant Design Vue demo` 默认拖拽设计、自定义设计、队列打印
+- [x] `优化删除元素功能` 支持 backSpace/delete 按键删除
+- [x] `优化拖动功能` 调整优化 不允许元素拖出窗口 按住ctrl/command允许拖出窗口外
+- [x] `优化框选功能` fix 原只能从上往下框选问题
+- [x] `支持修改默认直接打印主机` window.hiwebSocket.setHost("xxx:17521")
+- [x] `print优化调整` 支持设置callback 见demo的preview.vue
+- [x] `table/tableCustom优化调整` 支持设置options.fields 双击选择字段,
+- [x] `table优化调整` 支持设置isEnableInsertColumn/isEnableDeleteColumn等参数，支持插入/删除列
+- [x] `table/tableCustom优化调整` 支持设置options.tableHeaderRepeat/tableFooterRepeat 表头/表脚显示模式
+- [x] `table优化调整` 支持设置 不显示表头
+- [x] `条形码优化调整` fix 条码格式错误的问题（EAN-13、ITF、UPC等）
+- [x] `字段名优化调整` 元素的字段名(field) 支持嵌套（eg: a.b.c.d）
+- [x] `新增支持不分页(小票打印)` 可设置不分页 table、longText处理
+- [x] `新增支持复制/粘贴` 支持 基本元素的ctrl+c/v(复制/粘贴)
+- [x] `新增支持设置是否自动连接客户端` 支持 不自动连接'直接打印'客户端
+- [x] `新增支持表格设置列显示类型` 支持 设置表格列显示图片、二维码、条形码
+- [x] `调整优化表格列拖拽列宽限制` fix 设置旋转角度后 拖拽、跳动、辅助线相关问题
+- [x] `npm包新增提供Api打印方法` main.js引入时，Vue原型添加print、print2Api，方便直接打印
+- [x] `新增支持多选功能` 按住ctrl/command 多选元素 键盘/鼠标拖动 移动
+- [x] `调整优化元素设置旋转角度问题` fix 设置旋转角度后 拖拽、跳动、辅助线相关问题
+- [x] `新增支持元素拖拽旋转` 基本元素上新增旋转控制点，拖拽旋转、双击还原
+- [x] `调整优化标尺` 使用svg替换原图片标尺，让标尺更清晰
+- [x] `新增支持放大缩小功能` 提供模板新增zoom方法(transform：scale)，放大缩小拖动不乱跳
+- [x] `调整优化以支持Vue3.x` 调整qrcode.js fix vite项目报错问题
+- [x] `元素添加禁止拖拽` panels[n]printElements[m]options.draggable true、false
+- [x] `添加对齐api` hiprintTemplate.setElsAlign
+- [x] `表格字段添加聚合功能` 表格字段配置 options.columns[n]tableSummary
+- [x] `新增支持操作历史记录` 支持ctrl/command+(shift)+z 撤销重做, 并提供hiprintTemplate的undo,redo方法
+- [x] `新增坐标位置参数设置` 参数面板新增坐标位置参数,支持同步设置XY坐标,并提供coordinateSync设置默认同步与否
+- [x] `新增宽高大小参数设置` 参数面板新增宽高大小参数,支持同步设置宽高,并提供widthHeightSync设置默认同步与否
+- [x] `新增显示元素坐标位置` 拖拽时显示XY坐标位置,并支持两种显示默认,设置positionLineMode,坐标显示在辅助线上
+- [x] `新增显示元素宽高大小` 点击元素时显示宽高大小,支持重新样式(.resize-panel .size-box)
+- [x] `新增设置元素距离api` 多选元素后设置每个元素的间隔(垂直/水平) hiprintTemplate.setElsSpace(10,true)
+- [x] `调整优化table表头`  支持动态显示/隐藏表头列, getJson时也返回了所有设置的列
+- [x] `新增支持更新拖拽元素api` 通过tid获取拖拽元素/更新拖拽元素 hiprint.updateElementType(tid,(e)=>e)
+- [x] `新增支持不打印功能`   设置元素 showInPage: 'none' 打印时不打印
+- [x] `新增刷新获取打印机列表api` 连接上客户端时 通过 hiprint.refreshPrinterList 获取最新打印机列表
+- [x] `新增获取IP、IPv6、MAC的api` 连接上客户端时 通过 hiprint.getAddress('mac',(data)=>{}) 获取MAC地址
+- [x] `新增支持设置元素层级` 设置元素 zIndex: 10 调整元素层级
+- [x] `调整优化元素设置fields问题` 设置元素 options.fields: [{"text":'id',"field":'id']; getJson将返回此列表
+- [x] `新增支持图片地址选择按钮` new PrintTemplate时 指定 onImageChooseClick: (target) => {target.refresh('url')} 更新图片地址
+- [x] `新增支持图片元素设置缩放格式fit`  object-fix: fill|contain|cover|none
+- [x] `新增支持text元素修改为barcode/qrcode时调整控制按钮`  右和下控制点 变成 右下控制点(等比缩放)
+- [x] `调整优化控制点等比缩放功能`  右下控制点拖动时等比缩放, 按住shift时可自由缩放
+- [x] `调整优化元素框选功能`  从右侧参数栏快速从右往左选择时鼠标移动到design内时框选框的大小问题
+
+|setElsAlign 参数说明|说明|
+|---|---|
+|left|左对齐|
+|vertical|居中|
+|right|右对齐|
+|top|顶部对齐|
+|horizontal|垂直居中|
+|bottom|底部对齐|
+|distributeHor|横向分散|
+|distributeVer|纵向分散|
+
+|tableSummary 参数说明|说明|
+|---|---|
+|-(缺省或不匹配)|不聚合|
+|count|计数|
+|sum|合计|
+|avg|平均值|
+|min|最小值|
+|max|最大值|
+
+|setElsSpace 使用示例|说明|
+|---|---|
+|.setElsSpace(10)|垂直距离10(pt)|
+|.setElsSpace(10,true)|水平距离10(pt)|

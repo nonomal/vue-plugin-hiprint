@@ -58,6 +58,7 @@
               </a-button>
             </a-popconfirm>
           </a-button-group>
+          <json-view :template="template"/>
         </a-space>
       </a-col>
     </a-row>
@@ -91,6 +92,7 @@
 <script>
 
 import printPreview from './preview'
+import jsonView from '../json-view.vue'
 
 import {hiprint} from '../../index'
 import TaskRunner from 'concurrent-tasks';
@@ -101,10 +103,10 @@ import printData from './print-data'
 let hiprintTemplate;
 export default {
   name: "printCustom",
-  components: {printPreview},
+  components: {printPreview, jsonView},
   data() {
     return {
-      deactivated: false,
+      template: null,
       // 打印数量
       count: 1,
       // 当前纸张
@@ -164,16 +166,6 @@ export default {
     this.init()
     this.otherPaper()
   },
-  activated() {
-    // 重新再实例化, 处理切换demo, 无法拖拽问题
-    if (this.deactivated) {
-      this.init();
-      this.deactivated = false;
-    }
-  },
-  deactivated() {
-    this.deactivated = true;
-  },
   methods: {
     init() {
       hiprint.init({
@@ -183,7 +175,7 @@ export default {
       hiprint.PrintElementTypeManager.build('.hiprintEpContainer', 'taskProviderModule');
       $('#hiprint-printTemplate').empty()
       let template = this.$ls.get('KEY_TEMPLATE_TASKS', panel)
-      hiprintTemplate = new hiprint.PrintTemplate({
+      this.template = hiprintTemplate = new hiprint.PrintTemplate({
         template: template,
         settingContainer: '#PrintElementOptionSetting',
         paginationContainer: '.hiprint-printPagination'
@@ -226,7 +218,27 @@ export default {
         this.tasksPrint()
         return
       }
-      this.$message.error('客户端未连接,无法直接打印')
+      this.$error({
+        title: "客户端未连接",
+        content: (h) => (
+          <div>
+            连接【{hiwebSocket.host}】失败！
+            <br />
+            请确保目标服务器已
+            <a
+              href="https://gitee.com/CcSimple/electron-hiprint/releases"
+              target="_blank"
+            >
+              下载
+            </a>
+            并
+            <a href="hiprint://" target="_blank">
+              运行
+            </a>
+            打印服务！
+          </div>
+        ),
+      });
     },
     // 队列打印
     tasksPrint() {

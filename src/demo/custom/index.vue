@@ -56,6 +56,7 @@
               直接打印
               <a-icon type="printer"/>
             </a-button>
+            <a-button type="primary" @click="selectAll">全选元素</a-button>
           </a-button-group>
           <!-- 保存/清空 -->
           <a-button-group>
@@ -75,6 +76,7 @@
               </a-button>
             </a-popconfirm>
           </a-button-group>
+          <json-view :template="template"/>
         </a-space>
       </a-col>
     </a-row>
@@ -108,6 +110,7 @@
 <script>
 
 import printPreview from './preview'
+import jsonView from '../json-view.vue'
 
 import {hiprint} from '../../index'
 import providers from './providers'
@@ -116,10 +119,10 @@ import printData from './print-data'
 let hiprintTemplate;
 export default {
   name: "printCustom",
-  components: {printPreview},
+  components: {printPreview, jsonView},
   data() {
     return {
-      deactivated: false,
+      template: null,
       // 模板选择
       mode: 0,
       modeList: [],
@@ -184,16 +187,6 @@ export default {
     this.init()
     this.otherPaper()
   },
-  activated() {
-    // 重新再实例化, 处理切换demo, 无法拖拽问题
-    if (this.deactivated) {
-      this.changeMode();
-      this.deactivated = false;
-    }
-  },
-  deactivated() {
-    this.deactivated = true;
-  },
   methods: {
     init() {
       this.modeList = providers.map((e) => {
@@ -201,6 +194,9 @@ export default {
       })
       this.changeMode()
     },
+    selectAll(){
+      this.template.selectAllElements()
+    },  
     changeMode() {
       let {mode} = this
       let provider = providers[mode]
@@ -212,7 +208,7 @@ export default {
       $('#hiprint-printTemplate').empty()
       let templates = this.$ls.get('KEY_TEMPLATES', {})
       let template = templates[provider.value] ? templates[provider.value] : {}
-      hiprintTemplate = new hiprint.PrintTemplate({
+      this.template = hiprintTemplate = new hiprint.PrintTemplate({
         template: template,
         dataMode: 1, // 1:getJson 其他：getJsonTid 默认1
         history: false, // 是否需要 撤销重做功能
@@ -227,7 +223,6 @@ export default {
         paginationContainer: '.hiprint-printPagination'
       });
       hiprintTemplate.design('#hiprint-printTemplate');
-      console.log(hiprintTemplate);
       // 获取当前放大比例, 当zoom时传true 才会有
       this.scaleValue = hiprintTemplate.editingPanel.scale || 1;
     },
@@ -282,7 +277,27 @@ export default {
         hiprintTemplate.print2(printData, {printer: '', title: 'hiprint测试打印'});
         return
       }
-      this.$message.error('客户端未连接,无法直接打印')
+      this.$error({
+        title: "客户端未连接",
+        content: (h) => (
+          <div>
+            连接【{hiwebSocket.host}】失败！
+            <br />
+            请确保目标服务器已
+            <a
+              href="https://gitee.com/CcSimple/electron-hiprint/releases"
+              target="_blank"
+            >
+              下载
+            </a>
+            并
+            <a href="hiprint://" target="_blank">
+              运行
+            </a>
+            打印服务！
+          </div>
+        ),
+      });
     },
     save() {
       let {mode} = this
